@@ -280,5 +280,5 @@ pip-selfcheck.json
 logs
 volumes
 db.sql
-.idea
+/.idea
 recreate_db.sh
