@@ -1,0 +1,6 @@
+[run]
+omit =
+	app/modules/common/BaseRepository.py
+
+[report]
+show_missing=true
