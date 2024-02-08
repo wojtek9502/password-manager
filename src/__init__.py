@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from starlette.responses import RedirectResponse
 
 #db
 from src.common.Database import Database
