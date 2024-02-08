@@ -1,8 +1,10 @@
 
 from sqlalchemy import Column, UUID, String, Integer, DateTime, ForeignKey, LargeBinary
+from sqlalchemy.orm import relationship
 
 from src.common.BaseModel import BaseModel
 from src.common.mixins import InsertedOnMixin, UpdatedOnMixin
+from src.group.models import GroupModel
 
 MODULE_PREFIX = 'us_'
 
@@ -18,6 +20,7 @@ class UserModel(BaseModel, InsertedOnMixin, UpdatedOnMixin):
     hash_algo = Column(String(10), nullable=False)
     iterations = Column(Integer(), nullable=False)
 
+    groups = relationship('Group', secondary=MODULE_PREFIX + 'user_group', back_populates='groups')
 
 class UserTokenModel(BaseModel, InsertedOnMixin):
     __tablename__ = MODULE_PREFIX + 'user_token'
@@ -29,4 +32,8 @@ class UserTokenModel(BaseModel, InsertedOnMixin):
     user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), nullable=True)
 
 
+class UserGroupModel(BaseModel):
+    __tablename__ = MODULE_PREFIX + 'user_group'
 
+    group_id = Column(UUID(as_uuid=True), ForeignKey(GroupModel.id), primary_key=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), primary_key=True)

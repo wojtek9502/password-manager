@@ -7,9 +7,7 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 from starlette.responses import RedirectResponse
 
-#db
-from src.common.Database import Database
-from src.user.models import UserModel
+
 
 PROJECT_DIR = Path(__file__).parent
 LOGS_DIR = Path(PROJECT_DIR, 'logs')
@@ -19,6 +17,11 @@ load_dotenv()
 
 
 # DB
+from src.common.Database import Database
+from src.user.models import UserModel, UserTokenModel, UserGroupModel
+from src.group.models import GroupModel
+from src.password.models import PasswordModel, PasswordUrlModel, PasswordHistory, PasswordGroupModel
+
 engine = create_engine(os.environ['DB_URI'])
 Base = Database
 
