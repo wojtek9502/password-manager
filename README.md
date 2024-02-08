@@ -1,4 +1,4 @@
-## DND Manager
+## Password manager
 
 ### Requirements
 - Python 3.10
