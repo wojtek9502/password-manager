@@ -2,6 +2,7 @@ import logging
 import os
 from pathlib import Path
 
+from fastapi import FastAPI
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
@@ -16,5 +17,25 @@ logger = logging.getLogger()
 load_dotenv()
 
 
+# DB
 engine = create_engine(os.environ['DB_URI'])
 Base = Database
+
+# FastAPI
+app = FastAPI(
+    docs_url=f'/swagger-ui',
+    redoc_url=f'/redoc',
+    openapi_url=f'/openapi.json',
+    dependencies=[],
+)
+
+@app.get("/", include_in_schema=False)
+async def redirect_to_swagger():
+    return RedirectResponse(url='/swagger-ui')
+
+
+from src.api.user.router import router as user_router
+from src.api.tools.router import router as tools_router
+
+app.include_router(user_router)
+app.include_router(tools_router)
