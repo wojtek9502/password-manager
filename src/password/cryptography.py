@@ -21,7 +21,7 @@ class CryptographyFernet:
 
     def password_encrypt(self, message: bytes, password: str, iterations: int) -> bytes:
         pepper = os.environ['PASSWORD_ENCRYPT_PEPPER']
-        salt = secrets.token_bytes(16)
+        salt = secrets.token_bytes(32)
         password = password + pepper
 
         key = self._derive_key(password.encode(), salt, iterations)
@@ -39,7 +39,7 @@ class CryptographyFernet:
         password = password + pepper
 
         decoded = b64d(token)
-        salt, iterations, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
+        salt, iterations, token = decoded[:32], decoded[32:36], b64e(decoded[36:])
         iterations = int.from_bytes(iterations, 'big')
         key = self._derive_key(password.encode(), salt, iterations)
         return Fernet(key).decrypt(token)
