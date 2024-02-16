@@ -66,10 +66,10 @@ def upgrade() -> None:
     sa.Column('hash_algo', sa.String(length=30), nullable=False),
     sa.Column('iterations', sa.Integer(), nullable=False),
     sa.Column('note', sa.String(length=8192), nullable=True),
-    sa.Column('changed_bu_user_id', sa.UUID(), nullable=True),
+    sa.Column('changed_by_user_id', sa.UUID(), nullable=True),
     sa.Column('password_id', sa.UUID(), nullable=True),
     sa.Column('inserted_on', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['changed_bu_user_id'], ['us_user.id'], ),
+    sa.ForeignKeyConstraint(['changed_by_user_id'], ['us_user.id'], ),
     sa.ForeignKeyConstraint(['password_id'], ['pa_password.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

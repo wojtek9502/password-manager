@@ -15,5 +15,5 @@ class GroupModel(BaseModel):
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(4089), unique=False, nullable=False)
 
-    users = relationship('User', secondary='us_user', back_populates='groups')
-    passwords = relationship('Password', secondary='pa_password', back_populates='groups')
+    users = relationship('UserModel', secondary='us_user_group', back_populates='groups')
+    passwords = relationship('PasswordModel', secondary='pa_password_group', back_populates='groups')

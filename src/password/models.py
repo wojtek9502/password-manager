@@ -26,7 +26,7 @@ class PasswordModel(BaseModel, InsertedOnMixin, UpdatedOnMixin):
 
     urls = relationship("PasswordUrlModel", backref="password")
     history = relationship("PasswordHistory", backref="password")
-    groups = relationship('Group', secondary=MODULE_PREFIX + 'password_group', back_populates='passwords')
+    groups = relationship('GroupModel', secondary='pa_password_group', back_populates='passwords')
 
 
 class PasswordUrlModel(BaseModel):
@@ -50,7 +50,7 @@ class PasswordHistory(BaseModel, InsertedOnMixin):
     hash_algo = Column(String(30), nullable=False)
     iterations = Column(Integer(), nullable=False)
     note = Column(String(8192), nullable=True)
-    changed_bu_user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), nullable=True)
+    changed_by_user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), nullable=True)
     password_id = Column(UUID(as_uuid=True), ForeignKey(PasswordModel.id), nullable=True)
 
 

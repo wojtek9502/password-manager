@@ -20,7 +20,7 @@ class UserModel(BaseModel, InsertedOnMixin, UpdatedOnMixin):
     hash_algo = Column(String(10), nullable=False)
     iterations = Column(Integer(), nullable=False)
 
-    groups = relationship('Group', secondary=MODULE_PREFIX + 'user_group', back_populates='groups')
+    groups = relationship('GroupModel', secondary=MODULE_PREFIX + 'user_group', back_populates='users')
 
 class UserTokenModel(BaseModel, InsertedOnMixin):
     __tablename__ = MODULE_PREFIX + 'user_token'
