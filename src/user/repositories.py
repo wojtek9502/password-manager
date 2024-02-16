@@ -12,15 +12,15 @@ from src.user.models import UserModel, UserTokenModel
 
 
 class UserRepository(BaseRepository):
-    AUTH_SALT_TOKEN_BYTES = 128
-    AUTH_HASH_N_ITERATIONS = 100000
+    AUTH_SALT_TOKEN_BYTES = int(os.environ['USER_AUTH_SALT_TOKEN_BYTES'])
+    AUTH_HASH_N_ITERATIONS = int(os.environ['USER_AUTH_HASH_N_ITERATIONS'])
     AUTH_HASH_ALGO = 'PBKDF2'
 
     def model_class(self):
         return UserModel
 
     def create_password_hash(self, password: str, salt: Optional[bytes] = None, iterations: Optional[int] = None):
-        pepper = os.environ['USER_AUTH_PEPPER']
+        pepper = os.environ['USER_AUTH_PASSWORD_PEPPER']
         if not iterations:
             iterations = self.AUTH_HASH_N_ITERATIONS
 

@@ -10,17 +10,17 @@ logger = logging.getLogger()
 
 class GroupService:
     @staticmethod
-    def create_group() -> GroupModel:
+    def create() -> GroupModel:
         repo = GroupRepository()
         ...
 
     @staticmethod
-    def update_group() -> Optional[GroupModel]:
+    def update() -> Optional[GroupModel]:
         repo = GroupModel()
         ...
 
     @staticmethod
-    def delete_group(user_id: uuid.UUID) -> uuid.UUID:
+    def delete(user_id: uuid.UUID) -> uuid.UUID:
         repo = GroupModel()
         ...
 

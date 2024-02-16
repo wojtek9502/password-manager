@@ -40,6 +40,8 @@ async def redirect_to_swagger():
 
 from src.api.user.router import router as user_router
 from src.api.tools.router import router as tools_router
+from src.api.password.router import router as password_router
 
 app.include_router(user_router)
 app.include_router(tools_router)
+app.include_router(password_router)

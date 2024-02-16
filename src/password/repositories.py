@@ -1,5 +1,8 @@
+import hashlib
+import os
+import secrets
 import uuid
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -11,8 +14,21 @@ class PasswordRepository(BaseRepository):
     def model_class(self):
         return PasswordModel
 
-    def create(self) -> PasswordModel:
-        ...
+    def create_password_hash(self, client_password_encrypted: str,):
+        pepper = os.environ['USER_AUTH_PASSWORD_PEPPER']
+        if not server_iterations:
+            server_iterations = os.environ['USER_AUTH_HASH_N_ITERATIONS']
+
+        if not server_salt:
+            server_salt = secrets.token_bytes(int(os.environ['USER_AUTH_SALT_TOKEN_BYTES']))
+
+        hash_value = hashlib.pbkdf2_hmac(
+            'sha256',
+            client_password_hash.encode('utf-8') + pepper.encode('utf-8'),
+            server_salt,
+            server_iterations
+        )
+        return server_salt, hash_value
 
     def update(self) -> PasswordModel:
         ...

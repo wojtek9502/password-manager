@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
-from src.user.exceptions import UserLoginPasswordInvalidError
+from src.user.exceptions import UserLoginPasswordInvalidError, MasterTokenInvalidUseError
 from src.user.models import UserTokenModel
 from src.user.repositories import UserRepository, UserTokenRepository
 from src.user.types import UserJwtTokenPayload
@@ -155,6 +155,19 @@ class UserService:
             repo.session.close()
             raise e
         return entity
+
+    @staticmethod
+    def find_id_by_token(token: str) -> Optional[uuid.UUID]:
+        if token == os.environ['API_AUTH_MASTER_TOKEN']:
+            raise MasterTokenInvalidUseError('Master token cannot be use here')
+
+        repo = UserTokenRepository()
+        try:
+            entity = repo.find_by_token(token=token)
+        except (SQLAlchemyError, NotFoundEntityError) as e:
+            repo.session.close()
+            raise e
+        return entity.user_id
 
 
 class UserTokenService:
