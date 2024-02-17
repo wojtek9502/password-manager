@@ -11,14 +11,16 @@ class GroupRepository(BaseRepository):
     def model_class(self):
         return GroupModel
 
-    def create(self) -> GroupModel:
-        ...
+    def create(self, name: str) -> GroupModel:
+        entity = GroupModel(
+            name=name
+        )
+        return entity
 
-    def update(self) -> GroupModel:
-        ...
-
-    def find_all_by_user(self, user_id: uuid.UUID) -> List[GroupModel]:
-        ...
+    def update(self, entity_id: uuid.UUID, name: str) -> GroupModel:
+        entity: GroupModel = self.get_by_id(entity_id)
+        entity.name = name
+        return entity
 
     def find_by_id(self, group_id: uuid.UUID) -> GroupModel:
         try:

@@ -9,10 +9,11 @@ from src import engine
 class NotFoundEntityError(Exception):
     ...
 
+Session = sessionmaker(bind=engine, expire_on_commit=False, autocommit=False, autoflush=False)
+
 
 class BaseRepository(abc.ABC):
     def __init__(self):
-        Session = sessionmaker(bind=engine, expire_on_commit=False)
         self.session = Session()
 
     def __del__(self):

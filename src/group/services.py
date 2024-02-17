@@ -10,22 +10,27 @@ logger = logging.getLogger()
 
 class GroupService:
     @staticmethod
-    def create() -> GroupModel:
+    def create(name: str) -> GroupModel:
         repo = GroupRepository()
-        ...
+        entity = repo.create(name=name)
+        repo.save(entity)
+        repo.commit()
+        return entity
 
     @staticmethod
-    def update() -> Optional[GroupModel]:
-        repo = GroupModel()
-        ...
+    def update(group_id: uuid.UUID, new_name: str) -> Optional[GroupModel]:
+        repo = GroupRepository()
+        entity = repo.update(
+            entity_id=group_id,
+            name=new_name
+        )
+        repo.save(entity)
+        repo.commit()
+        return entity
 
     @staticmethod
-    def delete(user_id: uuid.UUID) -> uuid.UUID:
-        repo = GroupModel()
-        ...
-
-    @staticmethod
-    def find_all_by_user() -> List[GroupModel]:
-        repo = GroupModel()
-        ...
+    def delete(group_id: uuid.UUID) -> uuid.UUID:
+        repo = GroupRepository()
+        repo.find_by_id(group_id=group_id)
+        return group_id
 

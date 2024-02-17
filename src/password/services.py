@@ -24,7 +24,7 @@ class PasswordService:
         fernet_crypto = CryptographyFernet()
         password_encrypted_by_server = fernet_crypto.password_encrypt(
             message=password_client_side_encrypted,
-            additional_pepper=user_entity.password_hash,
+            additional_pepper=str(user_entity.password_hash),
             iterations=iterations
         )
         return password_encrypted_by_server
@@ -106,11 +106,17 @@ class PasswordService:
         )
 
         cls.add_password_to_groups(
-            password_id=password_entity,
+            password_id=password_entity.id,
             password_groups_ids=password_details.groups_ids
         )
 
         return password_entity
+
+    @classmethod
+    def get(cls, password_id: uuid.UUID) -> PasswordModel:
+        repo = PasswordRepository()
+        entity = repo.get_by_id(password_id)
+        return entity
 
     @classmethod
     def update(cls, entity_id: uuid.UUID, password_new_details: PasswordDTO) -> PasswordModel:
