@@ -17,15 +17,16 @@ class PasswordModel(BaseModel, InsertedOnMixin, UpdatedOnMixin):
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(4089), nullable=False)
     login = Column(String(2048), nullable=False)
-    password_hash = Column(LargeBinary(8192), unique=False, nullable=False)
-    salt = Column(LargeBinary(256), nullable=False)
-    hash_algo = Column(String(30), nullable=False)
-    iterations = Column(Integer(), nullable=False)
+    password_encrypted = Column(LargeBinary(8192), unique=False, nullable=False)
+    server_side_algo = Column(String(30), nullable=False)
+    server_side_iterations = Column(Integer(), nullable=False)
+    client_side_algo = Column(String(30), nullable=False)
+    client_side_iterations = Column(Integer(), nullable=False)
     note = Column(String(8192), unique=False, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), nullable=True)
 
-    urls = relationship("PasswordUrlModel", backref="password")
-    history = relationship("PasswordHistory", backref="password")
+    urls = relationship("PasswordUrlModel")
+    history = relationship("PasswordHistory")
     groups = relationship('GroupModel', secondary='pa_password_group', back_populates='passwords')
 
 
@@ -44,13 +45,9 @@ class PasswordHistory(BaseModel, InsertedOnMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(4089), nullable=False)
-    username = Column(String(2048), nullable=False)
-    old_password_hash = Column(LargeBinary(8192), nullable=False)
-    old_salt = Column(LargeBinary(256), nullable=False)
-    hash_algo = Column(String(30), nullable=False)
-    iterations = Column(Integer(), nullable=False)
+    login = Column(String(2048), nullable=False)
+    password = Column(String(8192), nullable=False)
     note = Column(String(8192), nullable=True)
-    changed_by_user_id = Column(UUID(as_uuid=True), ForeignKey(UserModel.id), nullable=True)
     password_id = Column(UUID(as_uuid=True), ForeignKey(PasswordModel.id), nullable=True)
 
 

@@ -13,7 +13,7 @@ class CryptographyFernetTest(ApiBaseTest):
         master_password = 'secret_master_password'
 
         # when
-        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), password=master_password, iterations=iterations)
+        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), additional_pepper=master_password, iterations=iterations)
 
         # then
         assert password_encrypt
@@ -28,7 +28,7 @@ class CryptographyFernetTest(ApiBaseTest):
         master_password = 'secret_master_password'
 
         # when - encrypt
-        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), password=master_password, iterations=iterations)
+        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), additional_pepper=master_password, iterations=iterations)
 
         # then
         assert password_encrypt
@@ -36,7 +36,7 @@ class CryptographyFernetTest(ApiBaseTest):
         assert password_encrypt != password
 
         # when - decrypt
-        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password=master_password)
+        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
         assert type(password_decrypt) == bytes
         assert password_decrypt.decode() == password
@@ -49,7 +49,7 @@ class CryptographyFernetTest(ApiBaseTest):
         master_password = 'secret_master_password'
 
         # when - encrypt
-        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), password=master_password, iterations=iterations)
+        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), additional_pepper=master_password, iterations=iterations)
 
         # then
         assert password_encrypt
@@ -57,7 +57,7 @@ class CryptographyFernetTest(ApiBaseTest):
         assert password_encrypt != password
 
         # when - decrypt
-        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password=master_password)
+        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
         assert type(password_decrypt) == bytes
         assert password_decrypt.decode() == password
@@ -70,7 +70,7 @@ class CryptographyFernetTest(ApiBaseTest):
         master_password = '8be327a0d7b1777bfa35b4522e074cd1d1f4cc9fc5abbfe7e2f3c253062154c3cd09104b4ad5ed8ce8d420e8c7b1e529713c008d150aca9dcc7d23edbe5d1534878a79626221a1777644f0814923931846324149c2573be1c3960adef2d2549e7694b690d77541028d57ec112cfe51b2f6945365d6a741272f889d1dcd904841'
 
         # when - encrypt
-        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), password=master_password, iterations=iterations)
+        password_encrypt = crypt_fernet.password_encrypt(message=password.encode(), additional_pepper=master_password, iterations=iterations)
 
         # then
         assert password_encrypt
@@ -78,7 +78,7 @@ class CryptographyFernetTest(ApiBaseTest):
         assert password_encrypt != password
 
         # when - decrypt
-        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password=master_password)
+        password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
         assert type(password_decrypt) == bytes
         assert password_decrypt.decode() == password
