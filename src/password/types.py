@@ -1,6 +1,6 @@
 import dataclasses
 import uuid
-from typing import List
+from typing import List, Optional
 
 
 @dataclasses.dataclass
@@ -16,15 +16,15 @@ class PasswordHistoryDTO:
 class PasswordDTO:
     name: str
     login: str
-    server_side_algo: str
-    server_side_iterations: int
     client_side_password_encrypted: bytes
     client_side_algo: str
     client_side_iterations: int
     note: str
     urls: List[str]
     user_id: uuid.UUID
-    groups_ids: List[uuid.UUID]
+    groups_ids: List[uuid.UUID] = dataclasses.field(default_factory=list)
+    server_side_algo: Optional[str] = 'fernet'
+    server_side_iterations: Optional[int] = 600_000
 
 
 @dataclasses.dataclass
