@@ -2,9 +2,8 @@ import logging
 import uuid
 from typing import List
 
-from sqlalchemy.orm import Session
-
 from src import UserModel
+from src.common.BaseService import BaseService
 from src.password.cryptography import CryptographyFernet
 from src.password.models import PasswordModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository
@@ -14,10 +13,7 @@ from src.user.repositories import UserRepository
 logger = logging.getLogger()
 
 
-class PasswordService:
-    def __init__(self, session: Session):
-        self.session = session
-
+class PasswordService(BaseService):
     def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,
                                       iterations: int, user_id: uuid.UUID) -> bytes:
 

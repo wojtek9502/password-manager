@@ -17,7 +17,7 @@ class CryptographyFernetTests(ApiBaseTest):
 
         # then
         assert password_encrypt
-        assert type(password_encrypt) == bytes
+        assert isinstance(password_encrypt, bytes)
         assert password_encrypt != password.encode()
 
     def test_encrypt_and_encrypt(self):

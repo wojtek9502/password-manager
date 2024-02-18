@@ -1,19 +1,15 @@
 import logging
 import uuid
-from typing import Optional, List
+from typing import Optional
 
-from sqlalchemy.orm import Session
-
+from src.common.BaseService import BaseService
 from src.group.models import GroupModel
 from src.group.repositories import GroupRepository
 
 logger = logging.getLogger()
 
 
-class GroupService:
-    def __init__(self, session: Session):
-        self.session = session
-
+class GroupService(BaseService):
     def create(self, name: str) -> GroupModel:
         repo = GroupRepository(session=self.session)
         entity = repo.create(name=name)

@@ -11,7 +11,6 @@ from src.api.user.schema import LoginResponseSchema, UserResponseSchema, UserUui
 from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
 from src.user.exceptions import UserLoginPasswordInvalidError
-from src.user.repositories import UserRepository
 from src.user.services import UserService, UserTokenService
 
 router = APIRouter(prefix='/user')

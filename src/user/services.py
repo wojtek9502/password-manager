@@ -10,8 +10,8 @@ import jwt
 import sqlalchemy
 from jwt import DecodeError
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 
+from src.common.BaseService import BaseService
 from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
 from src.user.exceptions import UserLoginPasswordInvalidError, MasterTokenInvalidUseError
@@ -22,10 +22,7 @@ from src.user.types import UserJwtTokenPayload
 logger = logging.getLogger()
 
 
-class UserJwtTokenService:
-    def __init__(self, session: Session):
-        self.session = session
-
+class UserJwtTokenService(BaseService):
     def create(self, username: str) -> Optional[str]:
         if not username:
             return None
@@ -71,10 +68,7 @@ class UserJwtTokenService:
         return token_decode
 
 
-class UserService:
-    def __init__(self, session: Session):
-        self.session = session
-
+class UserService(BaseService):
     def login_user(self, username: str, password_clear: str) -> str:
         repo = UserRepository(session=self.session)
         try:
@@ -169,9 +163,7 @@ class UserService:
         return entity.user_id
 
 
-class UserTokenService:
-    def __init__(self, session: Session):
-        self.session = session
+class UserTokenService(BaseService):
 
     def create_token(self, token, user_id: uuid.UUID, expiration_date: Optional[datetime.datetime] = None) -> UserTokenModel:
         repo = UserTokenRepository(session=self.session)
