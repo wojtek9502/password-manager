@@ -7,8 +7,8 @@ from src.user.services import UserJwtTokenService, UserService
 from tests.BaseTest import BaseTest
 
 
-def create_user() -> UserModel:
-    service = UserService()
+def create_user(session) -> UserModel:
+    service = UserService(session=session)
     username = 'admin'
     password_clear = 'password'
 
@@ -22,8 +22,8 @@ def create_user() -> UserModel:
 class UserJwtTokenServiceTests(BaseTest):
     def test_create_token(self):
         # given
-        user_entity = create_user()
-        token_service = UserJwtTokenService()
+        user_entity = create_user(self.session)
+        token_service = UserJwtTokenService(session=self.session)
         username = user_entity.username
 
         # when
@@ -36,7 +36,7 @@ class UserJwtTokenServiceTests(BaseTest):
 
     def test_create_token_for_empty_user(self):
         # given
-        token_service = UserJwtTokenService()
+        token_service = UserJwtTokenService(session=self.session)
         username = ''
 
         # when
@@ -49,8 +49,8 @@ class UserJwtTokenServiceTests(BaseTest):
 
     def test_create_and_token_validation(self):
         # given
-        user_entity = create_user()
-        token_service = UserJwtTokenService()
+        user_entity = create_user(self.session)
+        token_service = UserJwtTokenService(session=self.session)
         username = user_entity.username
 
         # when - create token
@@ -71,8 +71,8 @@ class UserJwtTokenServiceTests(BaseTest):
 
     def test_create_and_token_validation_when_token_invalid(self):
         # given
-        user_entity = create_user()
-        token_service = UserJwtTokenService()
+        user_entity = create_user(self.session)
+        token_service = UserJwtTokenService(session=self.session)
         username = user_entity.username
         invalid_token = 'abcd'
 
@@ -88,7 +88,7 @@ class UserJwtTokenServiceTests(BaseTest):
         # given
         username = ''
         token = 'token_123'
-        token_service = UserJwtTokenService()
+        token_service = UserJwtTokenService(session=self.session)
 
         # when - check is token valid, not existing user
         is_token_valid = token_service.is_valid(
@@ -103,7 +103,7 @@ class UserJwtTokenServiceTests(BaseTest):
         # given
         username = 'not exist'
         token = 'token_123'
-        token_service = UserJwtTokenService()
+        token_service = UserJwtTokenService(session=self.session)
 
         # when - check is token valid, not existing user
         with pytest.raises(NoResultFound) as exc_info:
@@ -117,8 +117,8 @@ class UserJwtTokenServiceTests(BaseTest):
 
     def test_token_decode(self):
         # given
-        user_entity = create_user()
-        token_service = UserJwtTokenService()
+        user_entity = create_user(self.session)
+        token_service = UserJwtTokenService(session=self.session)
         username = user_entity.username
 
         token_str = token_service.create(

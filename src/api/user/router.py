@@ -3,11 +3,13 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from src.api import auth
 from src.api.user.schema import LoginResponseSchema, UserResponseSchema, UserUuidResponseSchema, LoginRequestSchema, \
     UserCreateRequestSchema, UserUpdateRequestSchema
 from src.common.BaseRepository import NotFoundEntityError
+from src.common.db_session import get_db_session
 from src.user.exceptions import UserLoginPasswordInvalidError
 from src.user.repositories import UserRepository
 from src.user.services import UserService, UserTokenService
@@ -17,9 +19,9 @@ logger = logging.getLogger()
 
 
 @router.post("/login", response_model=LoginResponseSchema)
-async def login(request: LoginRequestSchema):
-    user_service = UserService()
-    user_token_service = UserTokenService()
+async def login(request: LoginRequestSchema, session: Session = Depends(get_db_session)):
+    user_service = UserService(session=session)
+    user_token_service = UserTokenService(session=session)
 
     try:
         user_logged_jwt_token = user_service.login_user(
@@ -48,8 +50,8 @@ async def login(request: LoginRequestSchema):
 
 @router.get("/", response_model=List[UserResponseSchema],
             dependencies=[Depends(auth.validate_api_key)])
-async def find_all():
-    service = UserService()
+async def find_all(session: Session = Depends(get_db_session)):
+    service = UserService(session=session)
 
     try:
         entities = service.find_all()
@@ -68,11 +70,11 @@ async def find_all():
 
 @router.get("/by_username", response_model=UserResponseSchema,
             dependencies=[Depends(auth.validate_api_key)])
-async def find_by_username(username: str):
-    repo = UserRepository()
+async def find_by_username(username: str, session: Session = Depends(get_db_session)):
+    service = UserService(session=session)
 
     try:
-        entity = repo.find_by_username(
+        entity = service.find_by_username(
             username=username,
         )
     except Exception:
@@ -86,8 +88,8 @@ async def find_by_username(username: str):
 
 @router.post("/create", response_model=UserResponseSchema,
              dependencies=[Depends(auth.validate_api_key)])
-async def create(request: UserCreateRequestSchema):
-    service = UserService()
+async def create(request: UserCreateRequestSchema, session: Session = Depends(get_db_session)):
+    service = UserService(session=session)
 
     try:
         entity = service.create_user(
@@ -106,8 +108,8 @@ async def create(request: UserCreateRequestSchema):
 
 @router.post("/update", response_model=UserResponseSchema,
              dependencies=[Depends(auth.validate_api_key)])
-async def update(request: UserUpdateRequestSchema):
-    service = UserService()
+async def update(request: UserUpdateRequestSchema, session: Session = Depends(get_db_session)):
+    service = UserService(session=session)
     try:
         entity = service.update_user(
             user_id=request.user_id,
@@ -125,8 +127,8 @@ async def update(request: UserUpdateRequestSchema):
 
 @router.delete("/delete", response_model=UserUuidResponseSchema,
                dependencies=[Depends(auth.validate_api_key)])
-async def delete(user_id: UUID):
-    service = UserService()
+async def delete(user_id: UUID, session: Session = Depends(get_db_session)):
+    service = UserService(session=session)
     try:
         entity_id = service.delete_user(
             user_id=user_id,

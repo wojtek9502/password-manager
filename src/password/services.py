@@ -2,6 +2,8 @@ import logging
 import uuid
 from typing import List
 
+from sqlalchemy.orm import Session
+
 from src import UserModel
 from src.password.cryptography import CryptographyFernet
 from src.password.models import PasswordModel
@@ -13,10 +15,13 @@ logger = logging.getLogger()
 
 
 class PasswordService:
-    @staticmethod
-    def _encrypt_password_server_side(password_client_side_encrypted: bytes, iterations: int, user_id: uuid.UUID) -> bytes:
+    def __init__(self, session: Session):
+        self.session = session
 
-        user_repo = UserRepository()
+    def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,
+                                      iterations: int, user_id: uuid.UUID) -> bytes:
+
+        user_repo = UserRepository(session=self.session)
         user_entity: UserModel = user_repo.get_by_id(user_id)
         if not user_entity:
             raise Exception(f"No user with id = {user_id}")
@@ -29,9 +34,8 @@ class PasswordService:
         )
         return password_encrypted_by_server
 
-    @staticmethod
-    def add_password_to_groups(password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
-        repo = PasswordGroupRepository()
+    def add_password_to_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
+        repo = PasswordGroupRepository(session=self.session)
         for group_id in password_groups_ids:
             password_group_entity = repo.add_password_to_group(
                 password_id=password_id,
@@ -40,9 +44,8 @@ class PasswordService:
             repo.save(password_group_entity)
         repo.commit()
 
-    @staticmethod
-    def create_password_urls(password_urls: List[str], password_id: uuid.UUID):
-        repo = PasswordUrlRepository()
+    def create_password_urls(self, password_urls: List[str], password_id: uuid.UUID):
+        repo = PasswordUrlRepository(session=self.session)
         for url in password_urls:
             entity = repo.create(
                 url=url,
@@ -51,9 +54,8 @@ class PasswordService:
             repo.save(entity)
         repo.commit()
 
-    @staticmethod
-    def update_password_to_groups(password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
-        repo = PasswordGroupRepository()
+    def update_password_to_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
+        repo = PasswordGroupRepository(session=self.session)
         repo.delete_password_from_all_groups(password_id=password_id)
 
         for group_id in password_groups_ids:
@@ -64,9 +66,8 @@ class PasswordService:
             repo.save(password_group_entity)
         repo.commit()
 
-    @staticmethod
-    def update_password_urls(password_urls: List[str], password_id: uuid.UUID):
-        repo = PasswordUrlRepository()
+    def update_password_urls(self, password_urls: List[str], password_id: uuid.UUID):
+        repo = PasswordUrlRepository(session=self.session)
         repo.delete_all_by_password_id(password_id=password_id)
 
         for url in password_urls:
@@ -77,10 +78,9 @@ class PasswordService:
             repo.save(entity)
         repo.commit()
 
-    @classmethod
-    def create(cls, password_details: PasswordDTO) -> PasswordModel:
-        password_repo = PasswordRepository()
-        server_side_password_encrypted = cls._encrypt_password_server_side(
+    def create(self, password_details: PasswordDTO) -> PasswordModel:
+        password_repo = PasswordRepository(session=self.session)
+        server_side_password_encrypted = self._encrypt_password_server_side(
             password_client_side_encrypted=password_details.client_side_password_encrypted,
             iterations=password_details.server_side_iterations,
             user_id=password_details.user_id
@@ -100,28 +100,26 @@ class PasswordService:
         password_repo.save(password_entity)
         password_repo.commit()
 
-        cls.create_password_urls(
+        self.create_password_urls(
             password_id=password_entity.id,
             password_urls=password_details.urls
         )
 
-        cls.add_password_to_groups(
+        self.add_password_to_groups(
             password_id=password_entity.id,
             password_groups_ids=password_details.groups_ids
         )
 
         return password_entity
 
-    @classmethod
-    def get(cls, password_id: uuid.UUID) -> PasswordModel:
-        repo = PasswordRepository()
+    def get(self, password_id: uuid.UUID) -> PasswordModel:
+        repo = PasswordRepository(session=self.session)
         entity = repo.get_by_id(password_id)
         return entity
 
-    @classmethod
-    def update(cls, entity_id: uuid.UUID, password_new_details: PasswordDTO) -> PasswordModel:
-        password_repo = PasswordRepository()
-        server_side_password_encrypted = cls._encrypt_password_server_side(
+    def update(self, entity_id: uuid.UUID, password_new_details: PasswordDTO) -> PasswordModel:
+        password_repo = PasswordRepository(session=self.session)
+        server_side_password_encrypted = self._encrypt_password_server_side(
             password_client_side_encrypted=password_new_details.client_side_password_encrypted,
             iterations=password_new_details.server_side_iterations,
             user_id=password_new_details.user_id
@@ -142,43 +140,40 @@ class PasswordService:
         password_repo.save(password_entity)
         password_repo.commit()
 
-        cls.update_password_urls(
+        self.update_password_urls(
             password_id=password_entity.id,
             password_urls=password_new_details.urls
         )
 
-        cls.update_password_to_groups(
+        self.update_password_to_groups(
             password_id=password_entity,
             password_groups_ids=password_new_details.groups_ids
         )
 
         return password_entity
 
-    @classmethod
-    def delete(cls, password_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
+    def delete(self, password_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
         # delete urls
-        password_urls_repo = PasswordUrlRepository()
+        password_urls_repo = PasswordUrlRepository(session=self.session)
         password_urls_repo.delete_all_by_password_id(password_id=password_id)
 
         # delete from group
-        password_groups_repo = PasswordGroupRepository()
+        password_groups_repo = PasswordGroupRepository(session=self.session)
         password_groups_repo.delete_password_from_all_groups(password_id=password_id)
 
-        password_repo = PasswordRepository()
+        password_repo = PasswordRepository(session=self.session)
         password_repo.delete(
             password_id=password_id,
             user_id=user_id
         )
         return password_id
 
-    @staticmethod
-    def find_all_by_user(user_id: uuid.UUID) -> List[PasswordModel]:
-        repo = PasswordRepository()
+    def find_all_by_user(self, user_id: uuid.UUID) -> List[PasswordModel]:
+        repo = PasswordRepository(session=self.session)
         entities = repo.find_all_by_user(user_id=user_id)
         return entities
 
-    @staticmethod
-    def find_all_by_group(group_id: uuid.UUID) -> List[PasswordModel]:
-        repo = PasswordRepository()
+    def find_all_by_group(self, group_id: uuid.UUID) -> List[PasswordModel]:
+        repo = PasswordRepository(session=self.session)
         entities = repo.find_by_group_id(group_id=group_id)
         return entities

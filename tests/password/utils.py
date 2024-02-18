@@ -1,3 +1,5 @@
+from sqlalchemy.orm import Session
+
 from src import GroupModel
 from src.group.services import GroupService
 from src.password.cryptography import CryptographyFernet
@@ -13,8 +15,8 @@ def mock_client_side_password_encrypted() -> bytes:
     return client_side_password_encrypted
 
 
-def mock_password_group(group_name: str) -> GroupModel:
-    service = GroupService()
+def mock_password_group(db_session: Session, group_name: str) -> GroupModel:
+    service = GroupService(session=db_session)
     entity = service.create(
         name=group_name
     )
@@ -22,8 +24,8 @@ def mock_password_group(group_name: str) -> GroupModel:
     return entity
 
 
-def mock_user(username: str, password_clear: str) -> GroupModel:
-    service = UserService()
+def mock_user(db_session: Session, username: str, password_clear: str) -> GroupModel:
+    service = UserService(session=db_session)
     entity = service.create_user(
         username=username,
         password_clear=password_clear

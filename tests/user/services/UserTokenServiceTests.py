@@ -1,12 +1,14 @@
 import datetime
 
+from sqlalchemy.orm import Session
+
 from src import UserModel
 from src.user.services import UserService, UserTokenService
 from tests.BaseTest import BaseTest
 
 
-def create_user() -> UserModel:
-    service = UserService()
+def create_user(session: Session) -> UserModel:
+    service = UserService(session=session)
     username = 'admin'
     password_clear = 'password'
 
@@ -20,8 +22,8 @@ def create_user() -> UserModel:
 class UserTokenServiceTest(BaseTest):
     def test_create_user_token(self):
         # given
-        service = UserTokenService()
-        user_entity = create_user()
+        service = UserTokenService(session=self.session)
+        user_entity = create_user(session=self.session)
         token = 'test_token'
 
         # when
@@ -37,8 +39,8 @@ class UserTokenServiceTest(BaseTest):
 
     def test_is_token_valid(self):
         # given
-        service = UserTokenService()
-        user_entity = create_user()
+        service = UserTokenService(session=self.session)
+        user_entity = create_user(session=self.session)
         token = 'test_token'
         service.create_token(
             token=token,
@@ -53,7 +55,7 @@ class UserTokenServiceTest(BaseTest):
 
     def test_is_token_valid_if_not_exists(self):
         # given
-        service = UserTokenService()
+        service = UserTokenService(session=self.session)
         token = 'test_token_not_exists'
 
         # when
@@ -64,8 +66,8 @@ class UserTokenServiceTest(BaseTest):
 
     def test_delete_user_token_when_no_tokens_expired(self):
         # given
-        service = UserTokenService()
-        user_entity = create_user()
+        service = UserTokenService(session=self.session)
+        user_entity = create_user(session=self.session)
         token = 'test_token'
 
         # when
@@ -84,8 +86,8 @@ class UserTokenServiceTest(BaseTest):
 
     def test_delete_user_token_when_token_expired(self):
         # given
-        service = UserTokenService()
-        user_entity = create_user()
+        service = UserTokenService(session=self.session)
+        user_entity = create_user(session=self.session)
         token = 'test_token'
         expiration_date_from_the_past = datetime.datetime.now() - datetime.timedelta(days=1)
 

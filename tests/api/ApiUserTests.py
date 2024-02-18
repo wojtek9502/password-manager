@@ -35,7 +35,7 @@ class ApiUsersTest(ApiBaseTest):
 
         # given - create user
         username = 'test'
-        service = UserService()
+        service = UserService(session=self.session)
         entity = service.create_user(
             username=username,
             password_clear='test'
@@ -62,7 +62,7 @@ class ApiUsersTest(ApiBaseTest):
 
         # given - create user
         username = 'test'
-        service = UserService()
+        service = UserService(session=self.session)
         entity = service.create_user(
             username=username,
             password_clear='test'
@@ -100,39 +100,11 @@ class ApiUsersTest(ApiBaseTest):
         # then
         assert "Not found user with username" in response_json['detail']
 
-    def test_get_user_by_username(self):
-        # given
-        API_AUTH_TOKEN = os.environ['API_AUTH_MASTER_TOKEN']
-        headers = {
-            "X-API-KEY": API_AUTH_TOKEN,
-            'Accept': 'application/json'
-        }
-
-        # given - create user
-        username = 'test'
-        service = UserService()
-        entity = service.create_user(
-            username=username,
-            password_clear='test'
-        )
-
-        # when
-        response = self.test_api.get(
-            url="/user/by_username",
-            headers=headers,
-            params={'username': username}
-        )
-        response_json = response.json()
-
-        # then
-        assert response_json['id'] == str(entity.id)
-        assert response_json['username'] == username
-
     def test_user_login(self):
         # given - create user
         username = 'test'
         password = 'test'
-        service = UserService()
+        service = UserService(session=self.session)
         service.create_user(
             username=username,
             password_clear=password
@@ -165,7 +137,7 @@ class ApiUsersTest(ApiBaseTest):
         # given - create user
         username = 'test'
         password = 'test'
-        service = UserService()
+        service = UserService(session=self.session)
         service.create_user(
             username=username,
             password_clear=password
@@ -288,7 +260,7 @@ class ApiUsersTest(ApiBaseTest):
         username = 'test'
         password = 'test'
 
-        service = UserService()
+        service = UserService(session=self.session)
         entity = service.create_user(
             username=username,
             password_clear=password
@@ -350,7 +322,7 @@ class ApiUsersTest(ApiBaseTest):
 
     def test_user_delete(self):
         # given - create users
-        service = UserService()
+        service = UserService(session=self.session)
         entity1 = service.create_user(
             username='test',
             password_clear='test'
@@ -387,7 +359,7 @@ class ApiUsersTest(ApiBaseTest):
 
     def test_user_delete_when_user_not_exists(self):
         # given - create users
-        service = UserService()
+        service = UserService(session=self.session)
         user_to_del_id = str(uuid.uuid4())
 
         # given

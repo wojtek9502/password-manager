@@ -4,7 +4,7 @@ from src.password.cryptography import CryptographyFernet
 from tests.api.ApiBaseTests import ApiBaseTest
 
 
-class CryptographyFernetTest(ApiBaseTest):
+class CryptographyFernetTests(ApiBaseTest):
     def test_encrypt(self):
         # given
         crypt_fernet = CryptographyFernet()
@@ -32,14 +32,15 @@ class CryptographyFernetTest(ApiBaseTest):
 
         # then
         assert password_encrypt
-        assert type(password_encrypt) == bytes
+        assert isinstance(password_encrypt, bytes)
         assert password_encrypt != password
 
         # when - decrypt
         password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
-        assert type(password_decrypt) == bytes
+        assert isinstance(password_decrypt, bytes)
         assert password_decrypt.decode() == password
+
 
     def test_encrypt_and_encrypt_very_long_password(self):
         # given
@@ -53,13 +54,13 @@ class CryptographyFernetTest(ApiBaseTest):
 
         # then
         assert password_encrypt
-        assert type(password_encrypt) == bytes
+        assert isinstance(password_encrypt, bytes)
         assert password_encrypt != password
 
         # when - decrypt
         password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
-        assert type(password_decrypt) == bytes
+        assert isinstance(password_decrypt, bytes)
         assert password_decrypt.decode() == password
 
     def test_encrypt_and_encrypt_very_long_password_and_very_long_master_password(self):
@@ -74,11 +75,11 @@ class CryptographyFernetTest(ApiBaseTest):
 
         # then
         assert password_encrypt
-        assert type(password_encrypt) == bytes
+        assert isinstance(password_encrypt, bytes)
         assert password_encrypt != password
 
         # when - decrypt
         password_decrypt = crypt_fernet.password_decrypt(token=password_encrypt, password_to_decrypt=master_password)
         assert password_decrypt
-        assert type(password_decrypt) == bytes
+        assert isinstance(password_decrypt, bytes)
         assert password_decrypt.decode() == password

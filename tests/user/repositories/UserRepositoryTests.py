@@ -10,7 +10,7 @@ from tests.BaseTest import BaseTest
 class UserRepositoryTest(BaseTest):
     def test_create_user(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         username = 'admin'
         password = 'admin'
 
@@ -29,7 +29,7 @@ class UserRepositoryTest(BaseTest):
 
     def test_find_by_username(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         username = 'admin'
 
         # when
@@ -50,7 +50,7 @@ class UserRepositoryTest(BaseTest):
 
     def test_find_by_not_existing_username(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         username = 'admin_not_exists'
 
         # when
@@ -62,7 +62,7 @@ class UserRepositoryTest(BaseTest):
 
     def test_find_by_user_id(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         username = 'admin'
 
         # when
@@ -83,7 +83,7 @@ class UserRepositoryTest(BaseTest):
 
     def test_find_by_not_existing_user_id(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')
 
         # when
@@ -93,11 +93,9 @@ class UserRepositoryTest(BaseTest):
         # then
         assert isinstance(exc_info.value, NoResultFound)
 
-
-
     def test_update_user(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         origin_username = 'admin'
         updated_username = 'admin_updated'
         origin_password = 'password'
@@ -129,7 +127,7 @@ class UserRepositoryTest(BaseTest):
 
     def test_delete_user_by_uuid(self):
         # given
-        repo = UserRepository()
+        repo = UserRepository(session=self.session)
         username = 'admin'
 
         # when

@@ -1,12 +1,12 @@
 import logging
-import os
-from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
 
 from src.api import auth
 from src.api.auth import API_KEY_NAME
+from src.common.db_session import get_db_session
 from src.password.services import PasswordService
 from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserService
@@ -16,8 +16,8 @@ logger = logging.getLogger()
 
 # TODO add request schema in decorator and return schema
 @router.get("/list", dependencies=[Depends(auth.validate_api_key)])
-async def password_list(request: Request):
-    user_service = UserService()
+async def password_list(request: Request, session: Session = Depends(get_db_session)):
+    user_service = UserService(session=session)
     password_service = PasswordService()
     token = request.headers.get(API_KEY_NAME)
 

@@ -1,13 +1,15 @@
 import datetime
 
+from sqlalchemy.orm import Session
+
 from src import UserModel
 from src.user.repositories import UserTokenRepository
 from src.user.services import UserService
 from tests.BaseTest import BaseTest
 
 
-def create_user() -> UserModel:
-    service = UserService()
+def create_user(session: Session) -> UserModel:
+    service = UserService(session=session)
     username = 'admin'
     password_clear = 'password'
 
@@ -21,8 +23,8 @@ def create_user() -> UserModel:
 class UserRepositoryTest(BaseTest):
     def test_create_user_token(self):
         # given
-        repo = UserTokenRepository()
-        user_entity = create_user()
+        repo = UserTokenRepository(session=self.session)
+        user_entity = create_user(session=self.session)
         token_value = 'token'
 
         # when
@@ -43,8 +45,8 @@ class UserRepositoryTest(BaseTest):
 
     def test_delete_user_token_when_no_tokens_expired(self):
         # given
-        repo = UserTokenRepository()
-        user_entity = create_user()
+        repo = UserTokenRepository(session=self.session)
+        user_entity = create_user(session=self.session)
         token_value = 'token'
 
         token_entity = repo.create(
@@ -65,8 +67,8 @@ class UserRepositoryTest(BaseTest):
 
     def test_delete_user_token_when_token_expired(self):
         # given
-        repo = UserTokenRepository()
-        user_entity = create_user()
+        repo = UserTokenRepository(session=self.session)
+        user_entity = create_user(session=self.session)
         token_value = 'token'
         expiration_date_from_the_past = datetime.datetime.now() - datetime.timedelta(days=1)
 

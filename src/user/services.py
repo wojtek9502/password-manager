@@ -10,6 +10,7 @@ import jwt
 import sqlalchemy
 from jwt import DecodeError
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
@@ -22,24 +23,25 @@ logger = logging.getLogger()
 
 
 class UserJwtTokenService:
-    @staticmethod
-    def create(username: str) -> Optional[str]:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def create(self, username: str) -> Optional[str]:
         if not username:
             return None
 
         payload = dataclasses.asdict(UserJwtTokenPayload(username=username))
-        user_password_hash = UserRepository().find_by_username(username).password_hash
+        user_password_hash = UserRepository(self.session).find_by_username(username).password_hash
         key = os.environ['JTW_TOKEN_PEPPER'] + "-" + str(base64.b64encode(user_password_hash))
         encoded_jwt = jwt.encode(payload=payload, key=key, algorithm="HS256")
         return encoded_jwt
 
-    @staticmethod
-    def is_valid(jwt_token: str, username: str) -> bool:
+    def is_valid(self, jwt_token: str, username: str) -> bool:
         if not username:
             return False
 
         valid_payload = dataclasses.asdict(UserJwtTokenPayload(username=username))
-        user_password_hash = UserRepository().find_by_username(username).password_hash
+        user_password_hash = UserRepository(self.session).find_by_username(username).password_hash
         key = os.environ['JTW_TOKEN_PEPPER'] + "-" + str(base64.b64encode(user_password_hash))
 
         try:
@@ -51,13 +53,12 @@ class UserJwtTokenService:
             return True
         return False
 
-    @staticmethod
-    def decode(jwt_token: str, username: str) -> Optional[UserJwtTokenPayload]:
+    def decode(self, jwt_token: str, username: str) -> Optional[UserJwtTokenPayload]:
         if not username:
             return None
 
         valid_payload = dataclasses.asdict(UserJwtTokenPayload(username=username))
-        user_password_hash = UserRepository().find_by_username(username).password_hash
+        user_password_hash = UserRepository(self.session).find_by_username(username).password_hash
         key = os.environ['JTW_TOKEN_PEPPER'] + "-" + str(base64.b64encode(user_password_hash))
         decoded_payload = jwt.decode(jwt=jwt_token, key=key, algorithms=["HS256"])
 
@@ -71,9 +72,11 @@ class UserJwtTokenService:
 
 
 class UserService:
-    @staticmethod
-    def login_user(username: str, password_clear: str) -> str:
-        repo = UserRepository()
+    def __init__(self, session: Session):
+        self.session = session
+
+    def login_user(self, username: str, password_clear: str) -> str:
+        repo = UserRepository(session=self.session)
         try:
             entity = repo.find_by_username(username=username)
         except (SQLAlchemyError, NotFoundEntityError):
@@ -91,12 +94,12 @@ class UserService:
             repo.session.close()
             raise UserLoginPasswordInvalidError()
 
-        user_logged_jwt_token = UserJwtTokenService.create(username=username)
+        user_logged_jwt_token = UserJwtTokenService(session=self.session).create(username=username)
         return user_logged_jwt_token
 
-    @staticmethod
-    def create_user(username: str, password_clear: str) -> UserModel:
-        repo = UserRepository()
+
+    def create_user(self, username: str, password_clear: str) -> UserModel:
+        repo = UserRepository(session=self.session)
         entity = repo.create(
             username=username,
             password_clear=password_clear,
@@ -110,9 +113,8 @@ class UserService:
 
         return entity
 
-    @staticmethod
-    def update_user(user_id: uuid.UUID, password_clear: str) -> Optional[UserModel]:
-        repo = UserRepository()
+    def update_user(self, user_id: uuid.UUID, password_clear: str) -> Optional[UserModel]:
+        repo = UserRepository(session=self.session)
 
         try:
             entity = repo.find_by_id(user_id)
@@ -127,9 +129,9 @@ class UserService:
         )
         return entity
 
-    @staticmethod
-    def delete_user(user_id: uuid.UUID) -> uuid.UUID:
-        repo = UserRepository()
+
+    def delete_user(self, user_id: uuid.UUID) -> uuid.UUID:
+        repo = UserRepository(session=self.session)
         try:
             entity_uuid = repo.delete_by_uuid(
                 user_uuid=user_id,
@@ -140,15 +142,13 @@ class UserService:
 
         return entity_uuid
 
-    @staticmethod
-    def find_all() -> List[UserModel]:
-        repo = UserRepository()
+    def find_all(self) -> List[UserModel]:
+        repo = UserRepository(session=self.session)
         entities = repo.find_all()
         return entities
 
-    @staticmethod
-    def find_by_username(username: str) -> Optional[UserModel]:
-        repo = UserRepository()
+    def find_by_username(self, username: str) -> Optional[UserModel]:
+        repo = UserRepository(session=self.session)
         try:
             entity = repo.find_by_username(username=username)
         except (SQLAlchemyError, NotFoundEntityError) as e:
@@ -156,12 +156,11 @@ class UserService:
             raise e
         return entity
 
-    @staticmethod
-    def find_id_by_token(token: str) -> Optional[uuid.UUID]:
+    def find_id_by_token(self, token: str) -> Optional[uuid.UUID]:
         if token == os.environ['API_AUTH_MASTER_TOKEN']:
             raise MasterTokenInvalidUseError('Master token cannot be use here')
 
-        repo = UserTokenRepository()
+        repo = UserTokenRepository(session=self.session)
         try:
             entity = repo.find_by_token(token=token)
         except (SQLAlchemyError, NotFoundEntityError) as e:
@@ -171,8 +170,11 @@ class UserService:
 
 
 class UserTokenService:
+    def __init__(self, session: Session):
+        self.session = session
+
     def create_token(self, token, user_id: uuid.UUID, expiration_date: Optional[datetime.datetime] = None) -> UserTokenModel:
-        repo = UserTokenRepository()
+        repo = UserTokenRepository(session=self.session)
 
         repo.delete_expired_tokens()
         old_token_entity = repo.find_by_token(token=token)
@@ -194,7 +196,7 @@ class UserTokenService:
         :param token:
         :return bool:
         """
-        repo = UserTokenRepository()
+        repo = UserTokenRepository(session=self.session)
         repo.delete_expired_tokens()
         token_entity = repo.find_by_token(token=token)
 
@@ -203,10 +205,10 @@ class UserTokenService:
         return True
 
     def delete_expired_tokens(self):
-        repo = UserTokenRepository()
+        repo = UserTokenRepository(session=self.session)
         repo.delete_expired_tokens()
 
     def get_all(self) -> List[UserTokenModel]:
-        repo = UserTokenRepository()
+        repo = UserTokenRepository(session=self.session)
         entities = repo.find_all()
         return entities

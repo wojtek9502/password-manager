@@ -4,9 +4,19 @@ import pytest
 from sqlalchemy import inspect, text
 
 from src import engine
+from src.common.db_session import SessionLocal
 
 
 class BaseTest(TestCase):
+    session = None
+
+    def setUp(self):
+        self.session = SessionLocal()
+
+    def tearDown(self):
+        if self.session.is_active:
+            self.session.close()
+
     @pytest.fixture(scope="function", autouse=True)
     def setup_test(self):
         self.cleanup_db()

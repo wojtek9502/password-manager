@@ -13,7 +13,7 @@ from tests.BaseTest import BaseTest
 class UserServiceTest(BaseTest):
     def test_create_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -29,7 +29,7 @@ class UserServiceTest(BaseTest):
 
     def test_find_all_users(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -45,7 +45,7 @@ class UserServiceTest(BaseTest):
 
     def test_find_user_by_username(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -61,7 +61,7 @@ class UserServiceTest(BaseTest):
 
     def test_find_user_by_username_when_user_not_exists(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'not_exist'
 
         with pytest.raises(NoResultFound) as exc_info:
@@ -72,7 +72,7 @@ class UserServiceTest(BaseTest):
 
     def test_login_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -92,7 +92,7 @@ class UserServiceTest(BaseTest):
 
     def test_login_user_wrong_password(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -113,7 +113,7 @@ class UserServiceTest(BaseTest):
 
     def test_login_user_not_exists(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'not_exists'
         password_clear = 'not_exists'
 
@@ -129,7 +129,7 @@ class UserServiceTest(BaseTest):
 
     def test_create_existing_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -150,7 +150,7 @@ class UserServiceTest(BaseTest):
 
     def test_update_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
         new_token = 'new_token'
@@ -171,7 +171,7 @@ class UserServiceTest(BaseTest):
 
     def test_update_not_existing_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         not_existing_user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')
 
         # when
@@ -186,8 +186,8 @@ class UserServiceTest(BaseTest):
 
     def test_delete_user(self):
         # given
-        repo = UserRepository()
-        service = UserService()
+        repo = UserRepository(session=self.session)
+        service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
 
@@ -208,7 +208,7 @@ class UserServiceTest(BaseTest):
 
     def test_delete_not_existing_user(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         not_existing_user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')
 
         # when
@@ -222,7 +222,7 @@ class UserServiceTest(BaseTest):
 
     def test_delete_not_existing_user_by_username(self):
         # given
-        service = UserService()
+        service = UserService(session=self.session)
         not_existing_user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')
 
         # when
