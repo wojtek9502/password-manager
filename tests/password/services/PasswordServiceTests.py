@@ -139,3 +139,6 @@ class PasswordServiceTests(BaseTest):
 
         assert len(new_password_entity.urls) == len(old_password_entity.urls)
         assert len(new_password_entity.groups) == len(old_password_entity.groups)
+
+        assert len(new_password_entity.history) > 0
+        assert new_password_entity.history[0].name != new_password_entity.name

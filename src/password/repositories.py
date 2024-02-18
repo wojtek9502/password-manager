@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src import GroupModel
 from src.common.BaseRepository import BaseRepository, NotFoundEntityError
-from src.password.models import PasswordModel, PasswordUrlModel, PasswordGroupModel
+from src.password.models import PasswordModel, PasswordUrlModel, PasswordGroupModel, PasswordHistoryModel
 
 
 class PasswordRepository(BaseRepository):
@@ -126,6 +126,67 @@ class PasswordUrlRepository(BaseRepository):
                 query.delete()
                 self.commit()
                 deleted_entities_ids.append(password_url_entity.id)
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+
+        return deleted_entities_ids
+
+
+class PasswordHistoryRepository(BaseRepository):
+    def model_class(self):
+        return PasswordHistoryModel
+
+    def create(self, name: str, login: str, server_side_password_encrypted: bytes, server_side_algo: str,
+               server_side_iterations: int, client_side_algo: str, client_side_iterations: int,
+               note: str, user_id: uuid.UUID, password_id: uuid.UUID) -> PasswordHistoryModel:
+        entity = PasswordHistoryModel(
+            name=name,
+            login=login,
+            password_encrypted=server_side_password_encrypted,
+            server_side_algo=server_side_algo,
+            server_side_iterations=server_side_iterations,
+            client_side_algo=client_side_algo,
+            client_side_iterations=client_side_iterations,
+            note=note,
+            user_id=user_id,
+            password_id=password_id
+        )
+        return entity
+
+    def find_all_by_password_id(self, password_id: uuid.UUID) -> List[PasswordHistoryModel]:
+        try:
+            entities = self.query().filter(PasswordHistoryModel.password_id == password_id).all()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        return entities
+
+    def delete(self, password_history_id: uuid.UUID) -> uuid.UUID:
+        query = self.query().filter(PasswordHistoryModel.id == password_history_id)
+        entity = query.one_or_none()
+        if entity:
+            entity_uuid = entity.id
+
+            try:
+                query.delete()
+                self.commit()
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+
+            return entity_uuid
+
+    def delete_all_by_password_id(self, password_id: uuid.UUID) -> List[uuid.UUID]:
+        query = self.query().filter(PasswordHistoryModel.password_id == password_id)
+        entities: List[PasswordUrlModel] = query.all()
+        deleted_entities_ids = []
+
+        for password_history_entity in entities:
+            try:
+                query.delete()
+                self.commit()
+                deleted_entities_ids.append(password_history_entity.id)
             except SQLAlchemyError as e:
                 self.session.rollback()
                 raise e

@@ -20,7 +20,7 @@ load_dotenv()
 from src.common.Database import Database
 from src.user.models import UserModel, UserTokenModel, UserGroupModel
 from src.group.models import GroupModel
-from src.password.models import PasswordModel, PasswordUrlModel, PasswordHistory, PasswordGroupModel
+from src.password.models import PasswordModel, PasswordUrlModel, PasswordHistoryModel, PasswordGroupModel
 
 engine = create_engine(os.environ['DB_URI'])
 Base = Database
