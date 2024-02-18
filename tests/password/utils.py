@@ -6,9 +6,9 @@ from src.password.cryptography import CryptographyFernet
 from src.user.services import UserService
 
 
-def mock_client_side_password_encrypted() -> bytes:
+def mock_client_side_password_encrypted(password_clear: str = 'password') -> bytes:
     client_side_password_encrypted = CryptographyFernet().password_encrypt(
-        message='password'.encode(),
+        message=password_clear.encode(),
         additional_pepper='f65ad83a6ec4bfc511d9924520d74bb20d7ca7631efdff0a028ae141bef3d820',
         iterations=600_000
     )

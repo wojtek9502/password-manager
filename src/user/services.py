@@ -123,7 +123,6 @@ class UserService(BaseService):
         )
         return entity
 
-
     def delete_user(self, user_id: uuid.UUID) -> uuid.UUID:
         repo = UserRepository(session=self.session)
         try:

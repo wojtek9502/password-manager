@@ -35,7 +35,7 @@ class PasswordRepository(BaseRepository):
         entity: PasswordModel = self.get_by_id(entity_id)
         entity.name = name
         entity.login = login
-        entity.server_side_password_encrypted = server_side_password_encrypted
+        entity.password_encrypted = server_side_password_encrypted
         entity.server_side_algo = server_side_algo
         entity.server_side_iterations = server_side_iterations
         entity.client_side_algo = client_side_algo
@@ -165,20 +165,20 @@ class PasswordGroupRepository(BaseRepository):
             return entity_uuid
 
     def delete_password_from_all_groups(self, password_id: uuid.UUID) -> List[uuid.UUID]:
-        query = self.query().filter(PasswordGroupModel.id == password_id)
-        entities: List[PasswordUrlModel] = query.all()
-        deleted_entities_ids = []
+        query = self.query().filter(PasswordGroupModel.password_id == password_id)
+        entities: List[PasswordGroupModel] = query.all()
+        deleted_password_ids = []
 
-        for password_url_entity in entities:
+        for password_group_entity in entities:
             try:
                 query.delete()
                 self.commit()
-                deleted_entities_ids.append(password_url_entity.id)
+                deleted_password_ids.append(password_group_entity.password_id)
             except SQLAlchemyError as e:
                 self.session.rollback()
                 raise e
 
-        return deleted_entities_ids
+        return deleted_password_ids
 
     @staticmethod
     def find_password_groups(password_entity: PasswordModel) -> List[GroupModel]:

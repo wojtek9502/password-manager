@@ -142,7 +142,7 @@ class PasswordService(BaseService):
         )
 
         self.update_password_to_groups(
-            password_id=password_entity,
+            password_id=password_entity.id,
             password_groups_ids=password_new_details.groups_ids
         )
 
