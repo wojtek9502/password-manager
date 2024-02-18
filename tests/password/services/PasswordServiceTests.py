@@ -1,7 +1,11 @@
+from src.group.repositories import GroupRepository
+from src.password.repositories import PasswordUrlRepository, PasswordGroupRepository, PasswordHistoryRepository, \
+    PasswordRepository
 from src.password.services import PasswordService
 from src.password.types import PasswordDTO
 from tests.BaseTest import BaseTest
-from tests.password.utils import mock_client_side_password_encrypted, mock_password_group, mock_user
+from tests.password.utils import mock_client_side_password_encrypted, mock_password_group, mock_user, \
+    mock_password_history
 
 
 class PasswordServiceTests(BaseTest):
@@ -125,12 +129,13 @@ class PasswordServiceTests(BaseTest):
             user_id=user_id
         )
 
+        # when - update password
         new_password_entity = service.update(
             entity_id=old_password_entity.id,
             password_new_details=password_new_details
         )
 
-        # then
+        # then - check is password updated, check password history entity
         assert new_password_entity.name == new_name
         assert new_password_entity.name != old_name
         assert new_password_entity.login == new_login
@@ -142,3 +147,77 @@ class PasswordServiceTests(BaseTest):
 
         assert len(new_password_entity.history) > 0
         assert new_password_entity.history[0].name != new_password_entity.name
+
+    def test_delete_password(self):
+        # given
+        password_service = PasswordService(session=self.session)
+        password_repo = PasswordRepository(session=self.session)
+        password_url_repo = PasswordUrlRepository(session=self.session)
+        group_repo = GroupRepository(session=self.session)
+        password_history_repo = PasswordHistoryRepository(session=self.session)
+
+        # given - password groups
+        group_name = 'group1'
+        group1_id = mock_password_group(db_session=self.session, group_name=group_name).id
+        old_groups_ids = [group1_id]
+
+        # given - password urls
+        old_password_urls = ['https://website1.pl', 'https://website2.pl']
+
+        # given - create user
+        user_id = mock_user(db_session=self.session, username='test', password_clear='test').id
+
+        # given - client side password
+        client_site_password_clear = 'password1'
+        old_client_side_password_encrypted = mock_client_side_password_encrypted(client_site_password_clear)
+
+        password_details: PasswordDTO = PasswordDTO(
+            name='test password',
+            login='test@test.pl',
+            server_side_algo='Fernet',
+            server_side_iterations=600_000,
+            client_side_password_encrypted=old_client_side_password_encrypted,
+            client_side_algo='Fernet',
+            client_side_iterations=600_000,
+            note='',
+            urls=old_password_urls,
+            groups_ids=old_groups_ids,
+            user_id=user_id
+        )
+
+        # when - create password, create password history
+        password_entity = password_service.create(
+            password_details=password_details
+        )
+        mock_password_history(
+            db_session=self.session,
+            password_id=password_entity.id,
+            password_details=password_details
+        )
+
+        # when - collect entities
+        user_passwords_entities = password_repo.find_all_by_user(user_id=user_id)
+        password_urls_entities = password_url_repo.find_all_by_password_id(password_id=password_entity.id)
+        password_history_entities = password_history_repo.find_all_by_password_id(password_id=password_entity.id)
+        group_entity = group_repo.find_by_id(group_id=group1_id)
+
+        # then - check password created
+        assert len(user_passwords_entities) != 0
+        assert len(password_urls_entities) != 0
+        assert len(password_history_entities) != 0
+        assert len(group_entity.passwords) != 0
+
+        # when - delete password
+        deleted_password_ids = password_service.delete(password_id=password_entity.id, user_id=user_id)
+
+        # when - collect entities
+        user_passwords_entities = password_repo.find_all_by_user(user_id=user_id)
+        password_urls_entities = password_url_repo.find_all_by_password_id(password_id=deleted_password_ids)
+        password_history_entities = password_history_repo.find_all_by_password_id(password_id=deleted_password_ids)
+        group_entity = group_repo.find_by_id(group_id=group1_id)
+
+        # then - check password deleted
+        assert len(user_passwords_entities) == 0
+        assert len(password_urls_entities) == 0
+        assert len(password_history_entities) == 0
+        assert len(group_entity.passwords) == 0

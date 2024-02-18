@@ -101,6 +101,14 @@ class PasswordUrlRepository(BaseRepository):
             raise e
         return entity
 
+    def find_all_by_password_id(self, password_id: uuid.UUID) -> List[PasswordUrlModel]:
+        try:
+            entities = self.query().filter(PasswordUrlModel.password_id == password_id).all()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+        return entities
+
     def delete(self, password_url_id: uuid.UUID) -> uuid.UUID:
         query = self.query().filter(PasswordUrlModel.id == password_url_id) 
         entity = query.one_or_none()
