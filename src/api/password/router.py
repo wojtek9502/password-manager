@@ -1,15 +1,17 @@
 import logging
 from typing import Annotated
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, Header
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from src.api import auth
-from src.api.auth import API_KEY_NAME
 from src.api.password.schema import PasswordListResponseSchema, PasswordCreateResponseSchema, \
-    PasswordCreateRequestSchema
+    PasswordCreateRequestSchema, PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, \
+    PasswordDeleteResponseSchema, PasswordDeleteRequestSchema, PasswordResponseSchema, PasswordGroupResponseSchema, \
+    PasswordHistoryResponseSchema, PasswordUrlResponseSchema
+from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
+from src.common.db_utils import entity_to_dict
 from src.password.services import PasswordService
 from src.password.types import PasswordDTO
 from src.user.exceptions import MasterTokenInvalidUseError
@@ -20,20 +22,39 @@ logger = logging.getLogger()
 
 
 @router.get("/list", dependencies=[Depends(auth.validate_api_key)], response_model=PasswordListResponseSchema)
-async def password_list(session: Session = Depends(get_db_session),
-                        x_api_key: Annotated[str | None, Header()] = None):
+async def password_list(request: Request, session: Session = Depends(get_db_session)):
+    passwords_items = []
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
-    token = x_api_key
+    token = request.headers['X-API-KEY']
 
     try:
         user_id = user_service.find_id_by_token(token=token)
     except MasterTokenInvalidUseError:
-        logger.warning("There is no password connected with master API token")
-        return {}
+        logger.warning("There is no passwords for this API token")
+        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
 
-    passwords = password_service.find_all_by_user(user_id=user_id)
-    return passwords
+    passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+
+    for password in passwords_entities:
+        password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password.urls]
+        password_history_items = [PasswordHistoryResponseSchema.model_validate(entity_to_dict(history)) for history in password.history]
+        groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password.groups]
+
+        password_item = PasswordResponseSchema(
+            password_id=password.id,
+            name=password.name,
+            login=password.name,
+            password_encrypted=password.password_encrypted.decode(),
+            client_side_algo=password.client_side_algo,
+            client_side_iterations=password.client_side_iterations,
+            user_id=password.user_id,
+            urls=password_urls,
+            history=password_history_items,
+            groups=groups
+        )
+        passwords_items.append(password_item)
+    return PasswordListResponseSchema(passwords=passwords_items)
 
 
 @router.post("/create",
@@ -49,8 +70,8 @@ async def create(request: PasswordCreateRequestSchema,
     try:
         user_id = user_service.find_id_by_token(token=token)
     except MasterTokenInvalidUseError:
-        logger.warning("There is no password connected with master API token")
-        return {}
+        logger.warning("There is no passwords for this API token")
+        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
 
     password_details: PasswordDTO = PasswordDTO(
         name=request.name,
@@ -65,25 +86,87 @@ async def create(request: PasswordCreateRequestSchema,
     )
     password = password_service.create(password_details)
     password_urls = [url.url for url in password.urls]
+    groups_ids = [group.id for group in password.groups]
     return PasswordCreateResponseSchema(
+        password_id=password.id,
         name=password.name,
         login=password.name,
         note=password.note,
         urls=password_urls,
         user_id=password.user_id,
-        groups_ids=[]
+        groups_ids=groups_ids
     )
 
 
-# TODO add request schema in decorator and return schema
 @router.post("/update",
-             dependencies=[Depends(auth.validate_api_key)])
-async def update(request):
-    ...
+             dependencies=[Depends(auth.validate_api_key)],
+             response_model=PasswordUpdateResponseSchema)
+async def update(request: PasswordUpdateRequestSchema,
+                 session: Session = Depends(get_db_session),
+                 x_api_key: Annotated[str | None, Header()] = None):
+    token = x_api_key
+    user_service = UserService(session=session)
+    password_service = PasswordService(session=session)
+
+    try:
+        user_id = user_service.find_id_by_token(token=token)
+    except MasterTokenInvalidUseError:
+        logger.warning("There is no passwords for this API token")
+        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
+
+    password_details: PasswordDTO = PasswordDTO(
+        name=request.name,
+        login=request.login,
+        client_side_password_encrypted=request.password_encrypted.encode(),
+        client_side_algo=request.client_side_algo,
+        client_side_iterations=request.client_side_iterations,
+        note=request.note,
+        urls=request.urls,
+        groups_ids=request.groups_ids,
+        user_id=user_id
+    )
+    password = password_service.update(
+        entity_id=request.password_id,
+        password_new_details=password_details
+    )
+    password_urls = [url.url for url in password.urls]
+    groups_ids = [group.id for group in password.groups]
+    return PasswordUpdateResponseSchema(
+        password_id=password.id,
+        name=password.name,
+        login=password.name,
+        note=password.note,
+        urls=password_urls,
+        user_id=password.user_id,
+        groups_ids=groups_ids
+    )
 
 
-# TODO add request schema in decorator and return schema
 @router.delete("/delete",
-               dependencies=[Depends(auth.validate_api_key)])
-async def delete(user_id: UUID):
-    ...
+               dependencies=[Depends(auth.validate_api_key)],
+               response_model=PasswordDeleteResponseSchema)
+async def delete(request: PasswordDeleteRequestSchema,
+                 session: Session = Depends(get_db_session),
+                 x_api_key: Annotated[str | None, Header()] = None):
+    token = x_api_key
+    user_service = UserService(session=session)
+    password_service = PasswordService(session=session)
+
+    try:
+        user_id = user_service.find_id_by_token(token=token)
+    except MasterTokenInvalidUseError:
+        logger.warning("There is no passwords for this API token")
+        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
+
+    try:
+        deleted_password_id = password_service.delete(
+            password_id=request.password_id,
+            user_id=user_id
+        )
+    except NotFoundEntityError:
+        logger.error(f"Not found password with id {request.password_id}")
+        raise HTTPException(status_code=404, detail=f"Not found password with id {request.password_id}")
+
+    return PasswordDeleteResponseSchema(
+        password_id=deleted_password_id
+    )

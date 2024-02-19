@@ -147,10 +147,23 @@ class PasswordService(BaseService):
             password_server_side_encrypted = password_entity.password_encrypted
             password_client_side = self._decrypt_password_server_side(
                 password_server_side_encrypted=password_server_side_encrypted,
-                user_id=password_entity.password.user_id
+                user_id=password_entity.user_id
             )
-
             password_entity.password_encrypted = password_client_side
+
+            #@TODO decrypt when add to history table, it will be faster
+            # decrypt user side in password history
+            decrypted_password_history = []
+            password_history_entities: List[PasswordHistoryModel] = password_entity.history
+            for password_history_entity in password_history_entities:
+                password_client_side = self._decrypt_password_server_side(
+                    password_server_side_encrypted=password_server_side_encrypted,
+                    user_id=password_entity.user_id
+                )
+                password_history_entity.password_encrypted = password_client_side
+                decrypted_password_history.append(password_history_entity)
+
+            password_entity.history = decrypted_password_history
             entities_with_encrypted_server_side.append(password_entity)
         return entities_with_encrypted_server_side
 
@@ -226,17 +239,6 @@ class PasswordService(BaseService):
             user_id=user_id
         )
         return password_id
-
-    def find_all_by_user(self, user_id: uuid.UUID) -> List[PasswordModel]:
-        repo = PasswordRepository(session=self.session)
-        entities = repo.find_all_by_user(user_id=user_id)
-        return entities
-
-    def find_all_by_group(self, group_id: uuid.UUID) -> List[PasswordModel]:
-        repo = PasswordRepository(session=self.session)
-        entities = repo.find_by_group_id(group_id=group_id)
-        return entities
-
 
 class PasswordHistoryService(BaseService):
     def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,

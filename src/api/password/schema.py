@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -29,18 +29,18 @@ class PasswordHistoryResponseSchema(BaseModel):
 
 
 class PasswordResponseSchema(BaseModel):
-    id: uuid.UUID
+    password_id: uuid.UUID
     name: str
     login: str
     password_encrypted: str
     client_side_algo: str
     client_side_iterations: int
-    note: str
     user_id: uuid.UUID
+    note: Optional[str] = ''
 
-    urls: List[PasswordUrlResponseSchema]
-    history: List[PasswordHistoryResponseSchema]
-    groups: List[PasswordGroupResponseSchema]
+    urls: Optional[List[PasswordUrlResponseSchema]] = []
+    history: Optional[List[PasswordHistoryResponseSchema]] = []
+    groups: Optional[List[PasswordGroupResponseSchema]] = []
 
 
 class PasswordListResponseSchema(BaseModel):
@@ -55,14 +55,44 @@ class PasswordCreateRequestSchema(BaseModel):
     client_side_iterations: int
     note: str
     urls: List[str]
-    user_id: uuid.UUID
     groups_ids: List[uuid.UUID]
 
 
 class PasswordCreateResponseSchema(BaseModel):
+    password_id: uuid.UUID
     name: str
     login: str
+    user_id: uuid.UUID
+    note: Optional[str] = ''
+    urls: Optional[List[str]] = []
+    groups_ids: Optional[List[uuid.UUID]] = []
+
+
+class PasswordUpdateRequestSchema(BaseModel):
+    password_id: uuid.UUID
+    name: str
+    login: str
+    password_encrypted: str
+    client_side_algo: str
+    client_side_iterations: int
     note: str
     urls: List[str]
-    user_id: uuid.UUID
     groups_ids: List[uuid.UUID]
+
+
+class PasswordUpdateResponseSchema(BaseModel):
+    password_id: uuid.UUID
+    name: str
+    login: str
+    user_id: uuid.UUID
+    note: Optional[str] = ''
+    urls: Optional[List[str]] = []
+    groups_ids: Optional[List[uuid.UUID]] = []
+
+
+class PasswordDeleteRequestSchema(BaseModel):
+    password_id: uuid.UUID
+
+
+class PasswordDeleteResponseSchema(BaseModel):
+    password_id: uuid.UUID
