@@ -150,38 +150,34 @@ class PasswordService(BaseService):
                 user_id=password_entity.user_id
             )
             password_entity.password_encrypted = password_client_side
-
-            #@TODO decrypt when add to history table, it will be faster
-            # decrypt user side in password history
-            decrypted_password_history = []
-            password_history_entities: List[PasswordHistoryModel] = password_entity.history
-            for password_history_entity in password_history_entities:
-                password_client_side = self._decrypt_password_server_side(
-                    password_server_side_encrypted=password_server_side_encrypted,
-                    user_id=password_entity.user_id
-                )
-                password_history_entity.password_encrypted = password_client_side
-                decrypted_password_history.append(password_history_entity)
-
-            password_entity.history = decrypted_password_history
-            entities_with_encrypted_server_side.append(password_entity)
         return entities_with_encrypted_server_side
+
+    def _password_update_prepare_password_history_dto(self, old_password_entity: PasswordModel,
+                                                      user_id: uuid.UUID) -> PasswordHistoryDTO:
+        client_side_password_encrypted = self._decrypt_password_server_side(
+            password_server_side_encrypted=old_password_entity.password_encrypted,
+            user_id=user_id
+        )
+
+        password_history_data = PasswordHistoryDTO(
+            name=old_password_entity.name,
+            login=old_password_entity.login,
+            client_side_password_encrypted=client_side_password_encrypted,
+            client_side_algo=old_password_entity.client_side_algo,
+            client_side_iterations=old_password_entity.client_side_iterations,
+            note=old_password_entity.note,
+            user_id=old_password_entity.user_id,
+            password_id=old_password_entity.id
+        )
+        return password_history_data
 
     def update(self, entity_id: uuid.UUID, password_new_details: PasswordDTO) -> PasswordModel:
         password_repo = PasswordRepository(session=self.session)
         old_password_entity = password_repo.get_by_id(entity_id)
-        password_history_data = PasswordHistoryDTO(
-                name=old_password_entity.name,
-                login=old_password_entity.login,
-                client_side_password_encrypted=old_password_entity.password_encrypted,
-                server_side_algo=old_password_entity.server_side_algo,
-                server_side_iterations=old_password_entity.server_side_iterations,
-                client_side_algo=old_password_entity.client_side_algo,
-                client_side_iterations=old_password_entity.client_side_iterations,
-                note=old_password_entity.note,
-                user_id=old_password_entity.user_id,
-                password_id=old_password_entity.id
-            )
+        old_password_dto = self._password_update_prepare_password_history_dto(
+            old_password_entity=old_password_entity,
+            user_id=password_new_details.user_id
+        )
 
         server_side_password_encrypted = self._encrypt_password_server_side(
             password_client_side_encrypted=password_new_details.client_side_password_encrypted,
@@ -215,7 +211,7 @@ class PasswordService(BaseService):
         )
 
         self.create_password_history_entity(
-            password_history_details=password_history_data
+            password_history_details=old_password_dto
         )
 
         return password_entity
@@ -272,18 +268,11 @@ class PasswordHistoryService(BaseService):
 
     def create(self, password_history_details: PasswordHistoryDTO) -> PasswordHistoryModel:
         password_history_repo = PasswordHistoryRepository(session=self.session)
-        server_side_password_encrypted = self._encrypt_password_server_side(
-            password_client_side_encrypted=password_history_details.client_side_password_encrypted,
-            iterations=password_history_details.server_side_iterations,
-            user_id=password_history_details.user_id
-        )
 
         password_history_entity = password_history_repo.create(
             name=password_history_details.name,
             login=password_history_details.login,
-            server_side_password_encrypted=server_side_password_encrypted,
-            server_side_algo=password_history_details.server_side_algo,
-            server_side_iterations=password_history_details.server_side_iterations,
+            client_side_password_encrypted=password_history_details.client_side_password_encrypted,
             client_side_algo=password_history_details.client_side_algo,
             client_side_iterations=password_history_details.client_side_iterations,
             note=password_history_details.note,

@@ -31,8 +31,6 @@ class PasswordDTO:
 class PasswordHistoryDTO:
     name: str
     login: str
-    server_side_algo: str
-    server_side_iterations: int
     client_side_password_encrypted: bytes
     client_side_algo: str
     client_side_iterations: int

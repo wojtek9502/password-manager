@@ -34,8 +34,6 @@ def mock_password_history(db_session: Session, password_id: uuid.UUID, password_
                 name=password_details.name,
                 login=password_details.login,
                 client_side_password_encrypted=password_details.client_side_password_encrypted,
-                server_side_algo=password_details.server_side_algo,
-                server_side_iterations=password_details.server_side_iterations,
                 client_side_algo=password_details.client_side_algo,
                 client_side_iterations=password_details.client_side_iterations,
                 note=password_details.note,

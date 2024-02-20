@@ -3,6 +3,7 @@ import uuid
 
 from sqlalchemy.orm import Session
 
+from src.password.services import PasswordService
 from src.user.services import UserService
 from tests.api.ApiBaseTests import ApiBaseTest
 
@@ -17,11 +18,10 @@ def _create_test_user_and_get_token(session: Session, user: str = 'test', passwo
 class ApiPasswordTests(ApiBaseTest):
     def test_create_password(self):
         # given
+        password_service = PasswordService(session=self.session)
         user_token = _create_test_user_and_get_token(session=self.session)
-
-        API_AUTH_TOKEN = os.environ['API_AUTH_MASTER_TOKEN']
         headers = {
-            "X-API-KEY": API_AUTH_TOKEN,
+            "X-API-KEY": user_token,
             'Accept': 'application/json'
         }
 

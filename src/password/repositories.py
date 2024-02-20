@@ -145,15 +145,13 @@ class PasswordHistoryRepository(BaseRepository):
     def model_class(self):
         return PasswordHistoryModel
 
-    def create(self, name: str, login: str, server_side_password_encrypted: bytes, server_side_algo: str,
-               server_side_iterations: int, client_side_algo: str, client_side_iterations: int,
+    def create(self, name: str, login: str, client_side_password_encrypted: bytes,
+               client_side_algo: str, client_side_iterations: int,
                note: str, user_id: uuid.UUID, password_id: uuid.UUID) -> PasswordHistoryModel:
         entity = PasswordHistoryModel(
             name=name,
             login=login,
-            password_encrypted=server_side_password_encrypted,
-            server_side_algo=server_side_algo,
-            server_side_iterations=server_side_iterations,
+            client_side_password_encrypted=client_side_password_encrypted,
             client_side_algo=client_side_algo,
             client_side_iterations=client_side_iterations,
             note=note,
