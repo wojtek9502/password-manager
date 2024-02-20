@@ -90,9 +90,5 @@ class PasswordUpdateResponseSchema(BaseModel):
     groups_ids: Optional[List[uuid.UUID]] = []
 
 
-class PasswordDeleteRequestSchema(BaseModel):
-    password_id: uuid.UUID
-
-
 class PasswordDeleteResponseSchema(BaseModel):
     password_id: uuid.UUID

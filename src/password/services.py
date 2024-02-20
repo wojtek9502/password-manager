@@ -150,6 +150,7 @@ class PasswordService(BaseService):
                 user_id=password_entity.user_id
             )
             password_entity.password_encrypted = password_client_side
+            entities_with_encrypted_server_side.append(password_entity)
         return entities_with_encrypted_server_side
 
     def _password_update_prepare_password_history_dto(self, old_password_entity: PasswordModel,
@@ -235,6 +236,7 @@ class PasswordService(BaseService):
             user_id=user_id
         )
         return password_id
+
 
 class PasswordHistoryService(BaseService):
     def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,

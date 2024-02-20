@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session
 from src.api import auth
 from src.api.password.schema import PasswordListResponseSchema, PasswordCreateResponseSchema, \
     PasswordCreateRequestSchema, PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, \
-    PasswordDeleteResponseSchema, PasswordDeleteRequestSchema, PasswordResponseSchema, PasswordGroupResponseSchema, \
+    PasswordDeleteResponseSchema, PasswordResponseSchema, PasswordGroupResponseSchema, \
     PasswordHistoryResponseSchema, PasswordUrlResponseSchema
 from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
@@ -44,7 +45,7 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
         password_item = PasswordResponseSchema(
             password_id=password.id,
             name=password.name,
-            login=password.name,
+            login=password.login,
             password_encrypted=password.password_encrypted.decode(),
             client_side_algo=password.client_side_algo,
             client_side_iterations=password.client_side_iterations,
@@ -90,7 +91,7 @@ async def create(request: PasswordCreateRequestSchema,
     return PasswordCreateResponseSchema(
         password_id=password.id,
         name=password.name,
-        login=password.name,
+        login=password.login,
         note=password.note,
         urls=password_urls,
         user_id=password.user_id,
@@ -134,7 +135,7 @@ async def update(request: PasswordUpdateRequestSchema,
     return PasswordUpdateResponseSchema(
         password_id=password.id,
         name=password.name,
-        login=password.name,
+        login=password.login,
         note=password.note,
         urls=password_urls,
         user_id=password.user_id,
@@ -145,7 +146,7 @@ async def update(request: PasswordUpdateRequestSchema,
 @router.delete("/delete",
                dependencies=[Depends(auth.validate_api_key)],
                response_model=PasswordDeleteResponseSchema)
-async def delete(request: PasswordDeleteRequestSchema,
+async def delete(password_id: uuid.UUID,
                  session: Session = Depends(get_db_session),
                  x_api_key: Annotated[str | None, Header()] = None):
     token = x_api_key
@@ -160,12 +161,12 @@ async def delete(request: PasswordDeleteRequestSchema,
 
     try:
         deleted_password_id = password_service.delete(
-            password_id=request.password_id,
+            password_id=password_id,
             user_id=user_id
         )
     except NotFoundEntityError:
-        logger.error(f"Not found password with id {request.password_id}")
-        raise HTTPException(status_code=404, detail=f"Not found password with id {request.password_id}")
+        logger.error(f"Not found password with id {password_id}")
+        raise HTTPException(status_code=404, detail=f"Not found password with id {password_id}")
 
     return PasswordDeleteResponseSchema(
         password_id=deleted_password_id
