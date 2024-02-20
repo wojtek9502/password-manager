@@ -1,5 +1,5 @@
 from src.group.repositories import GroupRepository
-from src.password.repositories import PasswordUrlRepository, PasswordGroupRepository, PasswordHistoryRepository, \
+from src.password.repositories import PasswordUrlRepository, PasswordHistoryRepository, \
     PasswordRepository
 from src.password.services import PasswordService
 from src.password.types import PasswordDTO

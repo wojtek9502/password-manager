@@ -52,14 +52,6 @@ class PasswordRepository(BaseRepository):
             raise e
         return entities
 
-    def find_by_group_id(self, group_id: uuid.UUID) -> PasswordModel:
-        try:
-            entity = self.query().filter(PasswordModel.id == group_id).one()
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            raise e
-        return entity
-
     def delete(self, password_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
         query = self.query().filter(PasswordModel.id == password_id)
         entity = query.one_or_none()

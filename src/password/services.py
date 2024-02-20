@@ -2,48 +2,17 @@ import logging
 import uuid
 from typing import List
 
-from src import UserModel
 from src.common.BaseService import BaseService
-from src.password.cryptography import CryptographyFernet
 from src.password.models import PasswordModel, PasswordHistoryModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository, \
     PasswordHistoryRepository
 from src.password.types import PasswordDTO, PasswordHistoryDTO
-from src.user.repositories import UserRepository
+from src.password.utils import _decrypt_password_server_side, _encrypt_password_server_side
 
 logger = logging.getLogger()
 
 
 class PasswordService(BaseService):
-    def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,
-                                      iterations: int, user_id: uuid.UUID) -> bytes:
-
-        user_repo = UserRepository(session=self.session)
-        user_entity: UserModel = user_repo.get_by_id(user_id)
-        if not user_entity:
-            raise Exception(f"No user with id = {user_id}")
-
-        fernet_crypto = CryptographyFernet()
-        password_encrypted_by_server = fernet_crypto.password_encrypt(
-            message=password_client_side_encrypted,
-            additional_pepper=str(user_entity.password_hash),
-            iterations=iterations
-        )
-        return password_encrypted_by_server
-
-    def _decrypt_password_server_side(self, password_server_side_encrypted: bytes, user_id: uuid.UUID) -> bytes:
-        user_repo = UserRepository(session=self.session)
-        user_entity: UserModel = user_repo.get_by_id(user_id)
-        if not user_entity:
-            raise Exception(f"No user with id = {user_id}")
-
-        fernet_crypto = CryptographyFernet()
-        password_encrypted_by_server = fernet_crypto.password_decrypt(
-            token=password_server_side_encrypted,
-            password_to_decrypt=str(user_entity.password_hash)
-        )
-        return password_encrypted_by_server
-
     def add_password_to_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
         repo = PasswordGroupRepository(session=self.session)
         for group_id in password_groups_ids:
@@ -90,7 +59,8 @@ class PasswordService(BaseService):
 
     def create(self, password_details: PasswordDTO) -> PasswordModel:
         password_repo = PasswordRepository(session=self.session)
-        server_side_password_encrypted = self._encrypt_password_server_side(
+        server_side_password_encrypted = _encrypt_password_server_side(
+            session=self.session,
             password_client_side_encrypted=password_details.client_side_password_encrypted,
             iterations=password_details.server_side_iterations,
             user_id=password_details.user_id
@@ -132,7 +102,8 @@ class PasswordService(BaseService):
         entity: PasswordModel = repo.get_by_id(password_id)
         password_server_side_encrypted = entity.password_encrypted
 
-        entity.password_encrypted = self._decrypt_password_server_side(
+        entity.password_encrypted = _decrypt_password_server_side(
+            session=self.session,
             password_server_side_encrypted=password_server_side_encrypted,
             user_id=entity.user_id
         )
@@ -145,7 +116,8 @@ class PasswordService(BaseService):
 
         for password_entity in entities:
             password_server_side_encrypted = password_entity.password_encrypted
-            password_client_side = self._decrypt_password_server_side(
+            password_client_side = _decrypt_password_server_side(
+                session=self.session,
                 password_server_side_encrypted=password_server_side_encrypted,
                 user_id=password_entity.user_id
             )
@@ -155,7 +127,8 @@ class PasswordService(BaseService):
 
     def _password_update_prepare_password_history_dto(self, old_password_entity: PasswordModel,
                                                       user_id: uuid.UUID) -> PasswordHistoryDTO:
-        client_side_password_encrypted = self._decrypt_password_server_side(
+        client_side_password_encrypted = _decrypt_password_server_side(
+            session=self.session,
             password_server_side_encrypted=old_password_entity.password_encrypted,
             user_id=user_id
         )
@@ -180,7 +153,8 @@ class PasswordService(BaseService):
             user_id=password_new_details.user_id
         )
 
-        server_side_password_encrypted = self._encrypt_password_server_side(
+        server_side_password_encrypted = _encrypt_password_server_side(
+            session=self.session,
             password_client_side_encrypted=password_new_details.client_side_password_encrypted,
             iterations=password_new_details.server_side_iterations,
             user_id=password_new_details.user_id
@@ -239,35 +213,6 @@ class PasswordService(BaseService):
 
 
 class PasswordHistoryService(BaseService):
-    def _encrypt_password_server_side(self, password_client_side_encrypted: bytes,
-                                      iterations: int, user_id: uuid.UUID) -> bytes:
-
-        user_repo = UserRepository(session=self.session)
-        user_entity: UserModel = user_repo.get_by_id(user_id)
-        if not user_entity:
-            raise Exception(f"No user with id = {user_id}")
-
-        fernet_crypto = CryptographyFernet()
-        password_encrypted_by_server = fernet_crypto.password_encrypt(
-            message=password_client_side_encrypted,
-            additional_pepper=str(user_entity.password_hash),
-            iterations=iterations
-        )
-        return password_encrypted_by_server
-
-    def _decrypt_password_server_side(self, password_server_side_encrypted: bytes, user_id: uuid.UUID) -> bytes:
-        user_repo = UserRepository(session=self.session)
-        user_entity: UserModel = user_repo.get_by_id(user_id)
-        if not user_entity:
-            raise Exception(f"No user with id = {user_id}")
-
-        fernet_crypto = CryptographyFernet()
-        password_encrypted_by_server = fernet_crypto.password_decrypt(
-            token=password_server_side_encrypted,
-            password_to_decrypt=str(user_entity.password_hash)
-        )
-        return password_encrypted_by_server
-
     def create(self, password_history_details: PasswordHistoryDTO) -> PasswordHistoryModel:
         password_history_repo = PasswordHistoryRepository(session=self.session)
 
@@ -303,7 +248,8 @@ class PasswordHistoryService(BaseService):
 
         for password_history_entity in entities:
             password_server_side_encrypted = password_history_entity.password_encrypted
-            password_client_side = self._decrypt_password_server_side(
+            password_client_side = _decrypt_password_server_side(
+                session=self.session,
                 password_server_side_encrypted=password_server_side_encrypted,
                 user_id=password_history_entity.password.user_id
             )
