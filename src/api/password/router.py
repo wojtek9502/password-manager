@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from src.api import auth
+from src.api.password.parsers import parse_password_history_to_response_schema
 from src.api.password.schema import PasswordListResponseSchema, PasswordCreateResponseSchema, \
     PasswordCreateRequestSchema, PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, \
-    PasswordDeleteResponseSchema, PasswordResponseSchema, PasswordGroupResponseSchema, \
-    PasswordHistoryResponseSchema, PasswordUrlResponseSchema
+    PasswordDeleteResponseSchema, PasswordResponseSchema, PasswordGroupResponseSchema, PasswordUrlResponseSchema
 from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
 from src.common.db_utils import entity_to_dict
@@ -35,21 +35,21 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
         logger.warning("There is no passwords for this API token")
         raise HTTPException(status_code=404, detail="There is no passwords for this API token")
 
-    passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+    passwords_dtos = password_service.get_all_by_user_id(user_id=user_id)
 
-    for password in passwords_entities:
-        password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password.urls]
-        password_history_items = [PasswordHistoryResponseSchema.model_validate(entity_to_dict(history)) for history in password.history]
-        groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password.groups]
+    for password_dto in passwords_dtos:
+        password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password_dto.urls]
+        password_history_items = [parse_password_history_to_response_schema(history) for history in password_dto.history]
+        groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password_dto.groups]
 
         password_item = PasswordResponseSchema(
-            password_id=password.id,
-            name=password.name,
-            login=password.login,
-            password_encrypted=password.password_encrypted.decode(),
-            client_side_algo=password.client_side_algo,
-            client_side_iterations=password.client_side_iterations,
-            user_id=password.user_id,
+            password_id=password_dto.id,
+            name=password_dto.name,
+            login=password_dto.login,
+            password_encrypted=password_dto.password_encrypted.decode(),
+            client_side_algo=password_dto.client_side_algo,
+            client_side_iterations=password_dto.client_side_iterations,
+            user_id=password_dto.user_id,
             urls=password_urls,
             history=password_history_items,
             groups=groups
@@ -77,17 +77,18 @@ async def create(request: PasswordCreateRequestSchema,
     password_details: PasswordDTO = PasswordDTO(
         name=request.name,
         login=request.login,
-        client_side_password_encrypted=request.password_encrypted.encode(),
+        password_encrypted=request.password_encrypted.encode(),
         client_side_algo=request.client_side_algo,
         client_side_iterations=request.client_side_iterations,
         note=request.note,
         urls=request.urls,
-        groups_ids=request.groups_ids,
+        groups=request.groups_ids,
         user_id=user_id
     )
     password = password_service.create(password_details)
     password_urls = [url.url for url in password.urls]
     groups_ids = [group.id for group in password.groups]
+
     return PasswordCreateResponseSchema(
         password_id=password.id,
         name=password.name,
@@ -118,12 +119,12 @@ async def update(request: PasswordUpdateRequestSchema,
     password_details: PasswordDTO = PasswordDTO(
         name=request.name,
         login=request.login,
-        client_side_password_encrypted=request.password_encrypted.encode(),
+        password_encrypted=request.password_encrypted.encode(),
         client_side_algo=request.client_side_algo,
         client_side_iterations=request.client_side_iterations,
         note=request.note,
         urls=request.urls,
-        groups_ids=request.groups_ids,
+        groups=request.groups_ids,
         user_id=user_id
     )
     password = password_service.update(

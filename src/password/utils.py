@@ -15,7 +15,7 @@ def _encrypt_password_server_side(session, password_client_side_encrypted: bytes
     fernet_crypto = CryptographyFernet()
     password_encrypted_by_server = fernet_crypto.password_encrypt(
         message=password_client_side_encrypted,
-        additional_pepper=str(user_entity.password_hash),
+        additional_pepper=str(user_entity.password_crypto),
         iterations=iterations
     )
     return password_encrypted_by_server
@@ -28,8 +28,9 @@ def _decrypt_password_server_side(session, password_server_side_encrypted: bytes
         raise Exception(f"No user with id = {user_id}")
 
     fernet_crypto = CryptographyFernet()
-    password_encrypted_by_server = fernet_crypto.password_decrypt(
+    password_decrypted_by_server = fernet_crypto.password_decrypt(
         token=password_server_side_encrypted,
-        password_to_decrypt=str(user_entity.password_hash)
+        password_to_decrypt=str(user_entity.password_crypto)
     )
-    return password_encrypted_by_server
+
+    return password_decrypted_by_server

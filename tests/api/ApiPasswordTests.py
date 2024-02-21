@@ -19,12 +19,12 @@ def _create_password(session: Session, user_id: uuid.UUID,
             login=login,
             server_side_algo='Fernet',
             server_side_iterations=600_000,
-            client_side_password_encrypted=password.encode(),
+            password_encrypted=password.encode(),
             client_side_algo='Fernet',
             client_side_iterations=600_000,
             note='',
             urls=[],
-            groups_ids=[],
+            groups=[],
             user_id=user_id
         )
     password_entity = password_service.create(password_details=password_dto)

@@ -3,9 +3,10 @@ from src.password.repositories import PasswordUrlRepository, PasswordHistoryRepo
     PasswordRepository
 from src.password.services import PasswordService
 from src.password.types import PasswordDTO
+from src.user.services import UserService
 from tests.BaseTest import BaseTest
-from tests.password.utils import mock_client_side_password_encrypted, mock_password_group, mock_user, \
-    mock_password_history
+from tests.test_utils.create_db_resources import create_user, create_password_history, create_group, \
+    create_client_side_password_encrypted
 
 
 class PasswordServiceTests(BaseTest):
@@ -18,29 +19,29 @@ class PasswordServiceTests(BaseTest):
 
         # password groups
         group_name = 'group1'
-        group1_id = mock_password_group(db_session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name).id
         groups_ids = [group1_id]
 
         # password urls
         password_urls = ['https://website1.pl', 'https://website2.pl']
 
         # create user
-        user_id = mock_user(db_session=self.session, username='test', password_clear='test').id
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # client side password
-        client_side_password_encrypted = mock_client_side_password_encrypted()
+        client_side_password_encrypted = create_client_side_password_encrypted()
 
         password_details: PasswordDTO = PasswordDTO(
             name=name,
             login=login,
             server_side_algo='Fernet',
             server_side_iterations=600_000,
-            client_side_password_encrypted=client_side_password_encrypted,
+            password_encrypted=client_side_password_encrypted,
             client_side_algo='Fernet',
             client_side_iterations=client_side_iterations,
             note='',
             urls=password_urls,
-            groups_ids=groups_ids,
+            groups=groups_ids,
             user_id=user_id
         )
 
@@ -68,29 +69,29 @@ class PasswordServiceTests(BaseTest):
 
         # password groups
         group_name = 'group1'
-        group1_id = mock_password_group(db_session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name).id
         old_groups_ids = [group1_id]
 
         # password urls
         old_password_urls = ['https://website1.pl', 'https://website2.pl']
 
         # create user
-        user_id = mock_user(db_session=self.session, username='test', password_clear='test').id
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # client side password
-        old_client_side_password_encrypted = mock_client_side_password_encrypted(old_password_clear)
+        old_client_side_password_encrypted = create_client_side_password_encrypted(old_password_clear)
 
         password_details: PasswordDTO = PasswordDTO(
             name=old_name,
             login=old_login,
             server_side_algo='Fernet',
             server_side_iterations=600_000,
-            client_side_password_encrypted=old_client_side_password_encrypted,
+            password_encrypted=old_client_side_password_encrypted,
             client_side_algo='Fernet',
             client_side_iterations=client_side_iterations,
             note='',
             urls=old_password_urls,
-            groups_ids=old_groups_ids,
+            groups=old_groups_ids,
             user_id=user_id
         )
 
@@ -113,19 +114,19 @@ class PasswordServiceTests(BaseTest):
         new_login = 'login2'
         new_name = 'name2'
         new_password_clear = 'password2'
-        new_client_side_password_encrypted = mock_client_side_password_encrypted(new_password_clear)
+        new_client_side_password_encrypted = create_client_side_password_encrypted(new_password_clear)
 
         password_new_details: PasswordDTO = PasswordDTO(
             name=new_name,
             login=new_login,
             server_side_algo='Fernet',
             server_side_iterations=600_000,
-            client_side_password_encrypted=new_client_side_password_encrypted,
+            password_encrypted=new_client_side_password_encrypted,
             client_side_algo='Fernet',
             client_side_iterations=client_side_iterations,
             note='',
             urls=old_password_urls,
-            groups_ids=old_groups_ids,
+            groups=old_groups_ids,
             user_id=user_id
         )
 
@@ -158,30 +159,30 @@ class PasswordServiceTests(BaseTest):
 
         # given - password groups
         group_name = 'group1'
-        group1_id = mock_password_group(db_session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name).id
         old_groups_ids = [group1_id]
 
         # given - password urls
         old_password_urls = ['https://website1.pl', 'https://website2.pl']
 
         # given - create user
-        user_id = mock_user(db_session=self.session, username='test', password_clear='test').id
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # given - client side password
-        client_site_password_clear = 'password1'
-        old_client_side_password_encrypted = mock_client_side_password_encrypted(client_site_password_clear)
+        client_side_password_clear = 'password1'
+        old_client_side_password_encrypted = create_client_side_password_encrypted(client_side_password_clear)
 
         password_details: PasswordDTO = PasswordDTO(
             name='test password',
             login='test@test.pl',
             server_side_algo='Fernet',
             server_side_iterations=600_000,
-            client_side_password_encrypted=old_client_side_password_encrypted,
+            password_encrypted=old_client_side_password_encrypted,
             client_side_algo='Fernet',
             client_side_iterations=600_000,
             note='',
             urls=old_password_urls,
-            groups_ids=old_groups_ids,
+            groups=old_groups_ids,
             user_id=user_id
         )
 
@@ -189,7 +190,7 @@ class PasswordServiceTests(BaseTest):
         password_entity = password_service.create(
             password_details=password_details
         )
-        mock_password_history(
+        create_password_history(
             db_session=self.session,
             password_id=password_entity.id,
             password_details=password_details
@@ -221,3 +222,88 @@ class PasswordServiceTests(BaseTest):
         assert len(password_urls_entities) == 0
         assert len(password_history_entities) == 0
         assert len(group_entity.passwords) == 0
+
+    def test_password_decrypt_from_server_layer(self):
+        # given
+        password_service = PasswordService(session=self.session)
+
+        # given - create user
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
+
+        # given - client side password
+        client_side_password_clear = 'password1'
+        client_side_password_encrypted = create_client_side_password_encrypted(client_side_password_clear)
+
+        password_details: PasswordDTO = PasswordDTO(
+            name='test password',
+            login='test@test.pl',
+            server_side_algo='Fernet',
+            server_side_iterations=600_000,
+            password_encrypted=client_side_password_encrypted,
+            client_side_algo='Fernet',
+            client_side_iterations=600_000,
+            note='',
+            urls=[],
+            groups=[],
+            user_id=user_id
+        )
+
+        # when - create password, create password history
+        password_service.create(
+            password_details=password_details
+        )
+
+        # when - collect entities, when get, password is decrypted from server layer
+        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+
+        # then - check password created
+        assert len(user_passwords_entities) != 0
+        assert user_passwords_entities[0].password_encrypted == client_side_password_encrypted
+
+    def test_password_decrypt_from_server_layer_when_user_password_changed(self):
+        # given
+        password_service = PasswordService(session=self.session)
+        user_service = UserService(session=self.session)
+
+        # given - create user
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
+
+        # given - client side password
+        client_side_password_clear = 'password1'
+        client_side_password_encrypted = create_client_side_password_encrypted(client_side_password_clear)
+
+        password_details: PasswordDTO = PasswordDTO(
+            name='test password',
+            login='test@test.pl',
+            server_side_algo='Fernet',
+            server_side_iterations=600_000,
+            password_encrypted=client_side_password_encrypted,
+            client_side_algo='Fernet',
+            client_side_iterations=600_000,
+            note='',
+            urls=[],
+            groups=[],
+            user_id=user_id
+        )
+
+        # when - create password, create password history
+        password_service.create(
+            password_details=password_details
+        )
+
+        # when - collect entities, when get, password is decrypted from server layer
+        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+
+        # then - check password decrypt
+        assert len(user_passwords_entities) != 0
+        assert user_passwords_entities[0].password_encrypted == client_side_password_encrypted
+
+        # when - change user password
+        # user_service.update_user(user_id=user_id, password_clear='new_password')
+        #
+        # # when - collect entities, when get, password is decrypted from server layer
+        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+
+        # then - check password decrypt
+        assert len(user_passwords_entities) != 0
+        assert user_passwords_entities[0].password_encrypted == client_side_password_encrypted

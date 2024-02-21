@@ -61,7 +61,7 @@ class PasswordService(BaseService):
         password_repo = PasswordRepository(session=self.session)
         server_side_password_encrypted = _encrypt_password_server_side(
             session=self.session,
-            password_client_side_encrypted=password_details.client_side_password_encrypted,
+            password_client_side_encrypted=password_details.password_encrypted,
             iterations=password_details.server_side_iterations,
             user_id=password_details.user_id
         )
@@ -87,7 +87,7 @@ class PasswordService(BaseService):
 
         self.add_password_to_groups(
             password_id=password_entity.id,
-            password_groups_ids=password_details.groups_ids
+            password_groups_ids=password_details.groups
         )
 
         return password_entity
@@ -102,6 +102,7 @@ class PasswordService(BaseService):
         entity: PasswordModel = repo.get_by_id(password_id)
         password_server_side_encrypted = entity.password_encrypted
 
+        # decrypt passwords from server layer
         entity.password_encrypted = _decrypt_password_server_side(
             session=self.session,
             password_server_side_encrypted=password_server_side_encrypted,
@@ -109,21 +110,38 @@ class PasswordService(BaseService):
         )
         return entity
 
-    def get_all_by_user_id(self, user_id: uuid.UUID) -> List[PasswordModel]:
+    def get_all_by_user_id(self, user_id: uuid.UUID) -> List[PasswordDTO]:
         repo = PasswordRepository(session=self.session)
         entities: List[PasswordModel] = repo.find_all_by_user(user_id=user_id)
-        entities_with_encrypted_server_side = []
+        password_dto_objects = []
 
+        # decrypt passwords from server layer
         for password_entity in entities:
             password_server_side_encrypted = password_entity.password_encrypted
-            password_client_side = _decrypt_password_server_side(
+            password_client_side_encrypted = _decrypt_password_server_side(
                 session=self.session,
                 password_server_side_encrypted=password_server_side_encrypted,
                 user_id=password_entity.user_id
             )
-            password_entity.password_encrypted = password_client_side
-            entities_with_encrypted_server_side.append(password_entity)
-        return entities_with_encrypted_server_side
+
+            password_entity_urls = [url.url for url in password_entity.urls]
+            password_entity_groups = [group.name for group in password_entity.groups]
+            password_dto = PasswordDTO(
+                id=password_entity.id,
+                name=password_entity.name,
+                login=password_entity.login,
+                password_encrypted=password_client_side_encrypted,
+                client_side_algo=password_entity.client_side_algo,
+                client_side_iterations=password_entity.server_side_iterations,
+                server_side_algo=password_entity.server_side_algo,
+                server_side_iterations=password_entity.server_side_iterations,
+                note=password_entity.note,
+                user_id=password_entity.user_id,
+                groups=password_entity_groups,
+                urls=password_entity_urls
+            )
+            password_dto_objects.append(password_dto)
+        return password_dto_objects
 
     def _password_update_prepare_password_history_dto(self, old_password_entity: PasswordModel,
                                                       user_id: uuid.UUID) -> PasswordHistoryDTO:
@@ -155,7 +173,7 @@ class PasswordService(BaseService):
 
         server_side_password_encrypted = _encrypt_password_server_side(
             session=self.session,
-            password_client_side_encrypted=password_new_details.client_side_password_encrypted,
+            password_client_side_encrypted=password_new_details.password_encrypted,
             iterations=password_new_details.server_side_iterations,
             user_id=password_new_details.user_id
         )
@@ -182,7 +200,7 @@ class PasswordService(BaseService):
 
         self.update_password_to_groups(
             password_id=password_entity.id,
-            password_groups_ids=password_new_details.groups_ids
+            password_groups_ids=password_new_details.groups
         )
 
         self.create_password_history_entity(
@@ -257,4 +275,3 @@ class PasswordHistoryService(BaseService):
             password_history_entity.password_encrypted = password_client_side
             entities_with_encrypted_server_side.append(password_history_entity)
         return entities_with_encrypted_server_side
-

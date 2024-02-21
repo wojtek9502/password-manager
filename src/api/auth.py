@@ -3,7 +3,7 @@ import os
 from fastapi import Security, HTTPException
 from fastapi.security import APIKeyHeader
 
-from src.common.db_session import get_db_session, SessionLocal
+from src.common.db_session import SessionLocal
 from src.user.services import UserTokenService
 
 API_KEY_NAME = 'X-API-KEY'

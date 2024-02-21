@@ -39,13 +39,15 @@ class UserRepository(BaseRepository):
         salt, password_hash = self.create_password_hash(password=password_clear)
         hash_algo = self.AUTH_HASH_ALGO
         iterations = self.AUTH_HASH_N_ITERATIONS
+        password_crypto_server_side = secrets.token_bytes(4096)  # token to encrypt/decrypt passwords on server side
 
         entity = UserModel(
             username=username,
             password_hash=password_hash,
             salt=salt,
             hash_algo=hash_algo,
-            iterations=iterations
+            iterations=iterations,
+            password_crypto=password_crypto_server_side
         )
         return entity
 

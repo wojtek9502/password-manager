@@ -19,6 +19,7 @@ class UserModel(BaseModel, InsertedOnMixin, UpdatedOnMixin):
     salt = Column(LargeBinary(256), nullable=False)
     hash_algo = Column(String(10), nullable=False)
     iterations = Column(Integer(), nullable=False)
+    password_crypto = Column(LargeBinary(8192), unique=False, nullable=False)
 
     groups = relationship('GroupModel', secondary=MODULE_PREFIX + 'user_group', back_populates='users')
 
