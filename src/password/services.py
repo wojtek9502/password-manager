@@ -7,7 +7,7 @@ from src.password.models import PasswordModel, PasswordHistoryModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository, \
     PasswordHistoryRepository
 from src.password.types import PasswordDTO, PasswordHistoryDTO
-from src.password.utils import _decrypt_password_server_side, _encrypt_password_server_side
+from src.password.utils import _decrypt_password_server_side, _encrypt_password_server_side, create_password_dto
 
 logger = logging.getLogger()
 
@@ -97,25 +97,29 @@ class PasswordService(BaseService):
         entity = password_history_service.create(password_history_details=password_history_details)
         return entity
 
-    def get(self, password_id: uuid.UUID) -> PasswordModel:
+    def get_user_password_dto(self, password_id: uuid.UUID) -> PasswordDTO:
         repo = PasswordRepository(session=self.session)
         entity: PasswordModel = repo.get_by_id(password_id)
         password_server_side_encrypted = entity.password_encrypted
 
         # decrypt passwords from server layer
-        entity.password_encrypted = _decrypt_password_server_side(
+        password_client_side_encrypted = _decrypt_password_server_side(
             session=self.session,
             password_server_side_encrypted=password_server_side_encrypted,
             user_id=entity.user_id
         )
-        return entity
+        password_dto = create_password_dto(
+            password_entity=entity,
+            password_client_side_encrypted=password_client_side_encrypted
+        )
+        return password_dto
 
-    def get_all_by_user_id(self, user_id: uuid.UUID) -> List[PasswordDTO]:
+    def get_user_passwords_dtos(self, user_id: uuid.UUID) -> List[PasswordDTO]:
         repo = PasswordRepository(session=self.session)
         entities: List[PasswordModel] = repo.find_all_by_user(user_id=user_id)
         password_dto_objects = []
 
-        # decrypt passwords from server layer
+        # decrypt passwords from server layer, create dto
         for password_entity in entities:
             password_server_side_encrypted = password_entity.password_encrypted
             password_client_side_encrypted = _decrypt_password_server_side(
@@ -124,21 +128,9 @@ class PasswordService(BaseService):
                 user_id=password_entity.user_id
             )
 
-            password_entity_urls = [url.url for url in password_entity.urls]
-            password_entity_groups = [group.name for group in password_entity.groups]
-            password_dto = PasswordDTO(
-                id=password_entity.id,
-                name=password_entity.name,
-                login=password_entity.login,
-                password_encrypted=password_client_side_encrypted,
-                client_side_algo=password_entity.client_side_algo,
-                client_side_iterations=password_entity.server_side_iterations,
-                server_side_algo=password_entity.server_side_algo,
-                server_side_iterations=password_entity.server_side_iterations,
-                note=password_entity.note,
-                user_id=password_entity.user_id,
-                groups=password_entity_groups,
-                urls=password_entity_urls
+            password_dto = create_password_dto(
+                password_entity=password_entity,
+                password_client_side_encrypted=password_client_side_encrypted
             )
             password_dto_objects.append(password_dto)
         return password_dto_objects
@@ -259,19 +251,21 @@ class PasswordHistoryService(BaseService):
         deleted_entities_ids = repo.delete_all_by_password_id(password_id=password_id)
         return deleted_entities_ids
 
-    def get_all_by_password_id(self, password_id: uuid.UUID) -> List[PasswordHistoryModel]:
+    def get_password_history_dtos(self, password_id: uuid.UUID) -> List[PasswordHistoryDTO]:
         repo = PasswordHistoryRepository(session=self.session)
         entities = repo.find_all_by_password_id(password_id=password_id)
-        entities_with_encrypted_server_side = []
+        password_history_dtos = []
 
         for password_history_entity in entities:
-            password_server_side_encrypted = password_history_entity.password_encrypted
-            password_client_side = _decrypt_password_server_side(
-                session=self.session,
-                password_server_side_encrypted=password_server_side_encrypted,
-                user_id=password_history_entity.password.user_id
+            password_history_dto = PasswordHistoryDTO(
+                name=password_history_entity.name,
+                login=password_history_entity.login,
+                client_side_password_encrypted=password_history_entity.client_side_password_encrypted,
+                client_side_algo=password_history_entity.client_side_algo,
+                client_side_iterations=password_history_entity.client_side_iterations,
+                note=password_history_entity.note,
+                user_id=password_history_entity.user_id,
+                password_id=password_history_entity.id
             )
-
-            password_history_entity.password_encrypted = password_client_side
-            entities_with_encrypted_server_side.append(password_history_entity)
-        return entities_with_encrypted_server_side
+            password_history_dtos.append(password_history_dto)
+        return password_history_dtos

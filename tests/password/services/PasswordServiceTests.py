@@ -254,7 +254,7 @@ class PasswordServiceTests(BaseTest):
         )
 
         # when - collect entities, when get, password is decrypted from server layer
-        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+        user_passwords_entities = password_service.get_user_passwords_dtos(user_id=user_id)
 
         # then - check password created
         assert len(user_passwords_entities) != 0
@@ -292,7 +292,7 @@ class PasswordServiceTests(BaseTest):
         )
 
         # when - collect entities, when get, password is decrypted from server layer
-        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+        user_passwords_entities = password_service.get_user_passwords_dtos(user_id=user_id)
 
         # then - check password decrypt
         assert len(user_passwords_entities) != 0
@@ -302,7 +302,7 @@ class PasswordServiceTests(BaseTest):
         # user_service.update_user(user_id=user_id, password_clear='new_password')
         #
         # # when - collect entities, when get, password is decrypted from server layer
-        user_passwords_entities = password_service.get_all_by_user_id(user_id=user_id)
+        user_passwords_entities = password_service.get_user_passwords_dtos(user_id=user_id)
 
         # then - check password decrypt
         assert len(user_passwords_entities) != 0

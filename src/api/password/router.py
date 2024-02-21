@@ -35,7 +35,7 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
         logger.warning("There is no passwords for this API token")
         raise HTTPException(status_code=404, detail="There is no passwords for this API token")
 
-    passwords_dtos = password_service.get_all_by_user_id(user_id=user_id)
+    passwords_dtos = password_service.get_user_passwords_dtos(user_id=user_id)
 
     for password_dto in passwords_dtos:
         password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password_dto.urls]

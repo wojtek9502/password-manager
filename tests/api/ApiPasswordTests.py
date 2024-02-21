@@ -134,7 +134,7 @@ class ApiPasswordTests(ApiBaseTest):
         )
         response_json = response.json()
         password_data = PasswordUpdateResponseSchema.model_validate(response_json)
-        password_db_entity = password_service.get(password_id=password_entity.id)
+        password_db_entity = password_service.get_user_password_dto(password_id=password_entity.id)
 
         # then
         assert password_data.name == new_name
@@ -163,7 +163,7 @@ class ApiPasswordTests(ApiBaseTest):
             headers=headers,
             params=payload
         )
-        user_passwords = password_service.get_all_by_user_id(user_id=user_id)
+        user_passwords = password_service.get_user_passwords_dtos(user_id=user_id)
 
         # then
         assert not len(user_passwords)
