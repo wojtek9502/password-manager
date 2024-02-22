@@ -1,8 +1,8 @@
-from src import PasswordModel
 from src.api.password.schema import PasswordHistoryResponseSchema
+from src.password.types import PasswordHistoryDTO
 
 
-def parse_password_history_to_response_schema(password_history_entity: PasswordModel) -> PasswordHistoryResponseSchema:
+def parse_password_history_to_response_schema(password_history_entity: PasswordHistoryDTO) -> PasswordHistoryResponseSchema:
     password_history_data = PasswordHistoryResponseSchema(
         id=password_history_entity.id,
         name=password_history_entity.name,
