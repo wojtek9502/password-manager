@@ -63,7 +63,7 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
              response_model=PasswordCreateResponseSchema)
 async def create(request: PasswordCreateRequestSchema,
                  session: Session = Depends(get_db_session),
-                 x_api_key: Annotated[str | None, Header()] = None):
+                 x_api_key: Annotated[str | None, Header(include_in_schema=False)] = None):
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
@@ -105,7 +105,7 @@ async def create(request: PasswordCreateRequestSchema,
              response_model=PasswordUpdateResponseSchema)
 async def update(request: PasswordUpdateRequestSchema,
                  session: Session = Depends(get_db_session),
-                 x_api_key: Annotated[str | None, Header()] = None):
+                 x_api_key: Annotated[str | None, Header(include_in_schema=False)] = None):
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
@@ -149,7 +149,7 @@ async def update(request: PasswordUpdateRequestSchema,
                response_model=PasswordDeleteResponseSchema)
 async def delete(password_id: uuid.UUID,
                  session: Session = Depends(get_db_session),
-                 x_api_key: Annotated[str | None, Header()] = None):
+                 x_api_key: Annotated[str | None, Header(include_in_schema=False)] = None):
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
