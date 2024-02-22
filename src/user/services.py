@@ -12,6 +12,7 @@ from jwt import DecodeError
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.common.BaseService import BaseService
+from src.group.repositories import GroupRepository
 from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
 from src.user.exceptions import UserLoginPasswordInvalidError, MasterTokenInvalidUseError
@@ -91,7 +92,6 @@ class UserService(BaseService):
         user_logged_jwt_token = UserJwtTokenService(session=self.session).create(username=username)
         return user_logged_jwt_token
 
-
     def create_user(self, username: str, password_clear: str) -> UserModel:
         repo = UserRepository(session=self.session)
         entity = repo.create(
@@ -105,6 +105,11 @@ class UserService(BaseService):
             repo.session.rollback()
             raise e
 
+        # create default group for user
+        group_repo = GroupRepository(session=self.session)
+        group_entity = group_repo.create(name='default', user_id=entity.id)
+        group_repo.save(group_entity)
+        group_repo.commit()
         return entity
 
     def update_user(self, user_id: uuid.UUID, password_clear: str) -> Optional[UserModel]:
@@ -126,8 +131,8 @@ class UserService(BaseService):
     def delete_user(self, user_id: uuid.UUID) -> uuid.UUID:
         repo = UserRepository(session=self.session)
         try:
-            entity_uuid = repo.delete_by_uuid(
-                user_uuid=user_id,
+            entity_uuid = repo.delete_by_id(
+                user_id=user_id,
             )
         except NotFoundEntityError as e:
             repo.session.rollback()
@@ -163,7 +168,6 @@ class UserService(BaseService):
 
 
 class UserTokenService(BaseService):
-
     def create_token(self, token, user_id: uuid.UUID, expiration_date: Optional[datetime.datetime] = None) -> UserTokenModel:
         repo = UserTokenRepository(session=self.session)
 

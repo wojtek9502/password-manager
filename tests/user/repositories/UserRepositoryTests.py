@@ -140,7 +140,7 @@ class UserRepositoryTest(BaseTest):
         repo.commit()
 
         # when
-        deleted_entity_id = repo.delete_by_uuid(user_uuid=entity_id)
+        deleted_entity_id = repo.delete_by_id(user_id=entity_id)
 
         # then
         assert entity_id == deleted_entity_id

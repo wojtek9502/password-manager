@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src import PasswordModel
 from src.api.password.schema import PasswordCreateRequestSchema, PasswordCreateResponseSchema, \
     PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, PasswordListResponseSchema
+from src.group.repositories import GroupRepository
 from src.password.services import PasswordService
 from src.password.types import PasswordDTO
 from tests.api.ApiBaseTests import ApiBaseTest
@@ -24,7 +25,7 @@ def _create_password(session: Session, user_id: uuid.UUID,
             client_side_iterations=600_000,
             note='',
             urls=[],
-            groups=[],
+            groups_ids=[],
             user_id=user_id
         )
     password_entity = password_service.create(password_details=password_dto)
@@ -61,6 +62,7 @@ class ApiPasswordTests(ApiBaseTest):
     def test_create_password(self):
         # given
         user_id, user_token = create_test_user_and_get_token(session=self.session)
+        user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
         headers = {
             "X-API-KEY": user_token,
             'Accept': 'application/json'
@@ -94,7 +96,7 @@ class ApiPasswordTests(ApiBaseTest):
         # then
         assert password_data.name == name
         assert password_data.login == login
-        assert password_data.groups_ids == []
+        assert password_data.groups_ids == [user_default_group.id]
         assert password_data.urls == urls
 
     def test_update_password(self):

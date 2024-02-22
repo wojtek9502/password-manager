@@ -5,16 +5,15 @@ from sqlalchemy.orm import Session
 
 from src import GroupModel
 from src.group.services import GroupService
-from src.group.types import GroupDTO
 from src.password.cryptography import CryptographyFernet
 from src.password.services import PasswordHistoryService
 from src.password.types import PasswordDTO, PasswordHistoryDTO
 from src.user.services import UserService, UserTokenService
 
 
-def create_group(session: Session, group_name: str = 'test') -> GroupModel:
+def create_group(session: Session, user_id: uuid.UUID, group_name: str = 'test') -> GroupModel:
     group_service = GroupService(session=session)
-    group_entity = group_service.create(group_name)
+    group_entity = group_service.create(name=group_name, user_id=user_id)
     return group_entity
 
 

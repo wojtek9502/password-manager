@@ -4,7 +4,6 @@ from typing import List
 from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
-from src import GroupModel
 from src.common.BaseRepository import BaseRepository, NotFoundEntityError
 from src.password.models import PasswordModel, PasswordUrlModel, PasswordGroupModel, PasswordHistoryModel
 
@@ -203,6 +202,16 @@ class PasswordGroupRepository(BaseRepository):
         )
         return entity
 
+    def get_password_group_entities_by_group_id(self, group_id: uuid.UUID) -> List[PasswordGroupModel]:
+        query = self.query().filter(PasswordGroupModel.group_id == group_id)
+        entities = query.all()
+        return entities
+
+    def get_password_group_entities_by_password_id(self, password_id: uuid.UUID) -> List[PasswordGroupModel]:
+        query = self.query().filter(PasswordGroupModel.password_id == password_id)
+        entities = query.all()
+        return entities
+
     def delete_password_from_group(self, password_id: uuid.UUID, group_id: uuid.UUID) -> uuid.UUID:
         query = self.query().filter(
             and_(
@@ -239,6 +248,14 @@ class PasswordGroupRepository(BaseRepository):
 
         return deleted_password_ids
 
-    @staticmethod
-    def find_password_groups(password_entity: PasswordModel) -> List[GroupModel]:
-        return password_entity.groups
+    def move_passwords_from_group_to_group(self, src_group_id: uuid.UUID, dst_group_id: uuid.UUID):
+        src_password_group_entities: List[PasswordGroupModel] = self.get_password_group_entities_by_group_id(src_group_id)
+        for src_password_group_entity in src_password_group_entities:
+            src_password_group_entity.group_id = dst_group_id
+        self.commit()
+
+    def move_password_from_group_to_group(self, src_group_id: uuid.UUID, dst_group_id: uuid.UUID):
+        src_password_group_entities: List[PasswordGroupModel] = self.get_password_group_entities_by_group_id(src_group_id)
+        for src_password_group_entity in src_password_group_entities:
+            src_password_group_entity.group_id = dst_group_id
+        self.commit()

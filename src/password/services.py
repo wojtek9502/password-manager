@@ -2,7 +2,9 @@ import logging
 import uuid
 from typing import List
 
+from src import GroupModel
 from src.common.BaseService import BaseService
+from src.group.repositories import GroupRepository
 from src.password.models import PasswordModel, PasswordHistoryModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository, \
     PasswordHistoryRepository
@@ -13,6 +15,11 @@ logger = logging.getLogger()
 
 
 class PasswordService(BaseService):
+    def get_password_groups(self, password_id: uuid.UUID) -> List[GroupModel]:
+        repo = PasswordRepository(session=self.session)
+        password_entity = repo.get_by_id(password_id)
+        return password_entity.groups
+
     def add_password_to_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
         repo = PasswordGroupRepository(session=self.session)
         for group_id in password_groups_ids:
@@ -33,7 +40,7 @@ class PasswordService(BaseService):
             repo.save(entity)
         repo.commit()
 
-    def update_password_to_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
+    def update_password_groups(self, password_groups_ids: List[uuid.UUID], password_id: uuid.UUID):
         repo = PasswordGroupRepository(session=self.session)
         repo.delete_password_from_all_groups(password_id=password_id)
 
@@ -57,6 +64,19 @@ class PasswordService(BaseService):
             repo.save(entity)
         repo.commit()
 
+    def _add_groups_to_password_entity(self, password_entity: PasswordModel, password_details: PasswordDTO):
+        # add passwords to groups, if no groups add to user default group
+        group_repo = GroupRepository(session=self.session)
+        if not len(password_details.groups_ids):
+            user_id = password_details.user_id
+            user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
+            password_details.groups_ids = [user_default_group.id]
+
+        groups_entities = group_repo.find_groups_by_ids(password_details.groups_ids)
+        for group_entity in groups_entities:
+            password_entity.groups.append(group_entity)
+        return password_entity
+
     def create(self, password_details: PasswordDTO) -> PasswordModel:
         password_repo = PasswordRepository(session=self.session)
         server_side_password_encrypted = _encrypt_password_server_side(
@@ -77,17 +97,19 @@ class PasswordService(BaseService):
             note=password_details.note,
             user_id=password_details.user_id
         )
+
+        # add passwords to groups
+        password_entity = self._add_groups_to_password_entity(
+            password_entity=password_entity,
+            password_details=password_details
+        )
         password_repo.save(password_entity)
         password_repo.commit()
 
+        # add password urls
         self.create_password_urls(
             password_id=password_entity.id,
             password_urls=password_details.urls
-        )
-
-        self.add_password_to_groups(
-            password_id=password_entity.id,
-            password_groups_ids=password_details.groups
         )
 
         return password_entity
@@ -190,9 +212,9 @@ class PasswordService(BaseService):
             password_urls=password_new_details.urls
         )
 
-        self.update_password_to_groups(
+        self.update_password_groups(
             password_id=password_entity.id,
-            password_groups_ids=password_new_details.groups
+            password_groups_ids=password_new_details.groups_ids
         )
 
         self.create_password_history_entity(

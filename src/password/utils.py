@@ -39,7 +39,7 @@ def _decrypt_password_server_side(session, password_server_side_encrypted: bytes
 
 def create_password_dto(password_entity: PasswordModel, password_client_side_encrypted: bytes):
     password_urls = [url.url for url in password_entity.urls]
-    password_groups_names = [group.name for group in password_entity.groups]
+    password_groups_dtos = []
     password_history_dtos = []
     for password_history in password_entity.history:
         history_dto = PasswordHistoryDTO(
@@ -67,7 +67,7 @@ def create_password_dto(password_entity: PasswordModel, password_client_side_enc
         note=password_entity.note,
         user_id=password_entity.user_id,
         history=password_history_dtos,
-        groups=password_groups_names,
+        groups_ids=password_groups_dtos,
         urls=password_urls
     )
     return password_dto

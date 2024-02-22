@@ -17,16 +17,16 @@ class PasswordServiceTests(BaseTest):
         login = 'test@test.pl'
         client_side_iterations = 600_000
 
+        # create user
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
+
         # password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
         groups_ids = [group1_id]
 
         # password urls
         password_urls = ['https://website1.pl', 'https://website2.pl']
-
-        # create user
-        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # client side password
         client_side_password_encrypted = create_client_side_password_encrypted()
@@ -41,7 +41,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=client_side_iterations,
             note='',
             urls=password_urls,
-            groups=groups_ids,
+            groups_ids=groups_ids,
             user_id=user_id
         )
 
@@ -67,16 +67,16 @@ class PasswordServiceTests(BaseTest):
         old_password_clear = 'password1'
         client_side_iterations = 600_000
 
+        # create user
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
+
         # password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
         old_groups_ids = [group1_id]
 
         # password urls
         old_password_urls = ['https://website1.pl', 'https://website2.pl']
-
-        # create user
-        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # client side password
         old_client_side_password_encrypted = create_client_side_password_encrypted(old_password_clear)
@@ -91,7 +91,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=client_side_iterations,
             note='',
             urls=old_password_urls,
-            groups=old_groups_ids,
+            groups_ids=old_groups_ids,
             user_id=user_id
         )
 
@@ -126,7 +126,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=client_side_iterations,
             note='',
             urls=old_password_urls,
-            groups=old_groups_ids,
+            groups_ids=old_groups_ids,
             user_id=user_id
         )
 
@@ -157,16 +157,16 @@ class PasswordServiceTests(BaseTest):
         group_repo = GroupRepository(session=self.session)
         password_history_repo = PasswordHistoryRepository(session=self.session)
 
+        # create user
+        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
+
         # given - password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name).id
+        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
         old_groups_ids = [group1_id]
 
         # given - password urls
         old_password_urls = ['https://website1.pl', 'https://website2.pl']
-
-        # given - create user
-        user_id = create_user(db_session=self.session, username='test', password_clear='test').id
 
         # given - client side password
         client_side_password_clear = 'password1'
@@ -182,7 +182,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=600_000,
             note='',
             urls=old_password_urls,
-            groups=old_groups_ids,
+            groups_ids=old_groups_ids,
             user_id=user_id
         )
 
@@ -244,7 +244,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=600_000,
             note='',
             urls=[],
-            groups=[],
+            groups_ids=[],
             user_id=user_id
         )
 
@@ -282,7 +282,7 @@ class PasswordServiceTests(BaseTest):
             client_side_iterations=600_000,
             note='',
             urls=[],
-            groups=[],
+            groups_ids=[],
             user_id=user_id
         )
 

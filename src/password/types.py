@@ -14,6 +14,7 @@ class PasswordHistoryDTO:
     user_id: uuid.UUID
     id: Optional[uuid.UUID] = None
 
+
 @dataclasses.dataclass
 class PasswordDTO:
     name: str
@@ -26,7 +27,7 @@ class PasswordDTO:
     id: Optional[uuid.UUID] = None
     urls: List[str] = dataclasses.field(default_factory=list)
     history: List[PasswordHistoryDTO] = dataclasses.field(default_factory=list)
-    groups: List[uuid.UUID] = dataclasses.field(default_factory=list)
+    groups_ids: List[uuid.UUID] = dataclasses.field(default_factory=list)
     server_side_algo: Optional[str] = 'fernet'
     server_side_iterations: Optional[int] = 600_000
 

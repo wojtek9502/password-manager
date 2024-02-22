@@ -5,10 +5,11 @@ import secrets
 import uuid
 from typing import Optional, List
 
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.common.BaseRepository import BaseRepository, NotFoundEntityError
-from src.user.models import UserModel, UserTokenModel
+from src.user.models import UserModel, UserTokenModel, UserGroupModel
 
 
 class UserRepository(BaseRepository):
@@ -88,12 +89,16 @@ class UserRepository(BaseRepository):
             raise e
         return entity
 
-    def delete_by_uuid(self, user_uuid: uuid.UUID) -> uuid.UUID:
-        query = self.query().filter(UserModel.id == user_uuid)
+    def delete_by_id(self, user_id: uuid.UUID) -> uuid.UUID:
+        query = self.query().filter(UserModel.id == user_id)
         entity = query.one_or_none()
         if not entity:
-            raise NotFoundEntityError(f"Not found user with uuid: {user_uuid}")
+            raise NotFoundEntityError(f"Not found user with uuid: {user_id}")
         entity_uuid = entity.id
+
+        UserGroupRepository(session=self.session).delete_user_from_all_groups(
+            user_id=user_id
+        )
 
         try:
             query.delete()
@@ -141,3 +146,44 @@ class UserTokenRepository(BaseRepository):
     def find_all(self) -> List[UserTokenModel]:
         entities = self.query().all()
         return entities
+
+
+class UserGroupRepository(BaseRepository):
+    def model_class(self):
+        return UserGroupModel
+
+    def delete_user_from_group(self, user_id: uuid.UUID, group_id: uuid.UUID) -> uuid.UUID:
+        query = self.query().filter(
+            and_(
+                UserGroupModel.id == user_id,
+                UserGroupModel.group_id == group_id,
+            )
+        )
+        entity = query.one_or_none()
+        if entity:
+            entity_uuid = entity.id
+
+            try:
+                query.delete()
+                self.commit()
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+
+            return entity_uuid
+
+    def delete_user_from_all_groups(self, user_id: uuid.UUID) -> List[uuid.UUID]:
+        query = self.query().filter(UserGroupModel.user_id == user_id)
+        entities: List[UserGroupModel] = query.all()
+        deleted_password_ids = []
+
+        for user_group_entity in entities:
+            try:
+                query.delete()
+                self.commit()
+                deleted_password_ids.append(user_group_entity.user_id)
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+
+        return deleted_password_ids

@@ -11,8 +11,7 @@ class PasswordUrlResponseSchema(BaseModel):
 
 
 class PasswordGroupResponseSchema(BaseModel):
-    group_id: uuid.UUID
-    password_id: uuid.UUID
+    id: uuid.UUID
     name: str
 
 

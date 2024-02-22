@@ -36,11 +36,11 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
         raise HTTPException(status_code=404, detail="There is no passwords for this API token")
 
     passwords_dtos = password_service.get_user_passwords_dtos(user_id=user_id)
-
     for password_dto in passwords_dtos:
+        password_groups_entities = password_service.get_password_groups(password_id=password_dto.id)
+        password_groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password_groups_entities]
         password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password_dto.urls]
         password_history_items = [parse_password_history_to_response_schema(history) for history in password_dto.history]
-        groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password_dto.groups]
 
         password_item = PasswordResponseSchema(
             password_id=password_dto.id,
@@ -52,7 +52,7 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
             user_id=password_dto.user_id,
             urls=password_urls,
             history=password_history_items,
-            groups=groups
+            groups=password_groups
         )
         passwords_items.append(password_item)
     return PasswordListResponseSchema(passwords=passwords_items)
@@ -82,7 +82,7 @@ async def create(request: PasswordCreateRequestSchema,
         client_side_iterations=request.client_side_iterations,
         note=request.note,
         urls=request.urls,
-        groups=request.groups_ids,
+        groups_ids=request.groups_ids,
         user_id=user_id
     )
     password = password_service.create(password_details)
@@ -124,7 +124,7 @@ async def update(request: PasswordUpdateRequestSchema,
         client_side_iterations=request.client_side_iterations,
         note=request.note,
         urls=request.urls,
-        groups=request.groups_ids,
+        groups_ids=request.groups_ids,
         user_id=user_id
     )
     password = password_service.update(
