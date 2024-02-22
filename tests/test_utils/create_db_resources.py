@@ -61,7 +61,6 @@ def create_password_history(db_session: Session, password_id: uuid.UUID, passwor
                 password_id=password_id
             )
     )
-
     return entity
 
 

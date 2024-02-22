@@ -1,0 +1,6 @@
+class PasswordError(Exception):
+    ...
+
+
+class PasswordNotBelongsToUserError(PasswordError):
+    ...

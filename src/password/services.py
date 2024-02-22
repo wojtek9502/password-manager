@@ -5,6 +5,7 @@ from typing import List
 from src import GroupModel
 from src.common.BaseService import BaseService
 from src.group.repositories import GroupRepository
+from src.password.exceptions import PasswordNotBelongsToUserError
 from src.password.models import PasswordModel, PasswordHistoryModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository, \
     PasswordHistoryRepository
@@ -273,13 +274,25 @@ class PasswordHistoryService(BaseService):
         deleted_entities_ids = repo.delete_all_by_password_id(password_id=password_id)
         return deleted_entities_ids
 
-    def get_password_history_dtos(self, password_id: uuid.UUID) -> List[PasswordHistoryDTO]:
+    def validate_password_belong_to_user(self, password_id: uuid.UUID, user_id: uuid.UUID):
+        repo = PasswordRepository(session=self.session)
+        password_entity = repo.get_by_id(password_id)
+        if password_entity.user_id != user_id:
+            raise PasswordNotBelongsToUserError('Password not belongs to user')
+
+    def get_password_history(self, password_id: uuid.UUID, user_id: uuid.UUID) -> List[PasswordHistoryDTO]:
+        self.validate_password_belong_to_user(
+            password_id=password_id,
+            user_id=user_id
+        )
+
         repo = PasswordHistoryRepository(session=self.session)
         entities = repo.find_all_by_password_id(password_id=password_id)
         password_history_dtos = []
 
         for password_history_entity in entities:
             password_history_dto = PasswordHistoryDTO(
+                id=password_history_entity.id,
                 name=password_history_entity.name,
                 login=password_history_entity.login,
                 client_side_password_encrypted=password_history_entity.client_side_password_encrypted,

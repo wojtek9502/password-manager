@@ -1,43 +1,19 @@
-import uuid
-
-from sqlalchemy.orm import Session
-
-from src import PasswordModel
 from src.api.password.schema import PasswordCreateRequestSchema, PasswordCreateResponseSchema, \
-    PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, PasswordListResponseSchema
+    PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, PasswordListResponseSchema, PasswordHistoryResponseSchema
 from src.group.repositories import GroupRepository
 from src.password.services import PasswordService
-from src.password.types import PasswordDTO
+from src.password.utils import _decrypt_password_server_side, create_password_dto
 from tests.api.ApiBaseTests import ApiBaseTest
-from tests.test_utils.create_db_resources import create_test_user_and_get_token
-
-
-def _create_password(session: Session, user_id: uuid.UUID,
-                     name: str = 'test', login: str = 'test@test.pl', password: str = 'pass') -> PasswordModel:
-    password_service = PasswordService(session=session)
-    password_dto: PasswordDTO = PasswordDTO(
-            name=name,
-            login=login,
-            server_side_algo='Fernet',
-            server_side_iterations=600_000,
-            password_encrypted=password.encode(),
-            client_side_algo='Fernet',
-            client_side_iterations=600_000,
-            note='',
-            urls=[],
-            groups_ids=[],
-            user_id=user_id
-        )
-    password_entity = password_service.create(password_details=password_dto)
-    return password_entity
+from tests.test_utils.create_db_resources import create_test_user_and_get_token, create_password, \
+    create_password_history
 
 
 class ApiPasswordTests(ApiBaseTest):
-    def test_list_password(self):
+    def test_password_list(self):
         # given
         user_id, user_token = create_test_user_and_get_token(session=self.session)
-        password_entity1 = _create_password(session=self.session, user_id=user_id, name='password1', login='test1')
-        password_entity2 = _create_password(session=self.session, user_id=user_id, name='password2', login='test2')
+        password_entity1 = create_password(session=self.session, user_id=user_id, name='password1', login='test1')
+        password_entity2 = create_password(session=self.session, user_id=user_id, name='password2', login='test2')
 
         headers = {
             "X-API-KEY": user_token,
@@ -58,6 +34,83 @@ class ApiPasswordTests(ApiBaseTest):
         assert response_data.passwords[0].login == password_entity1.login
         assert response_data.passwords[1].name == password_entity2.name
         assert response_data.passwords[1].login == password_entity2.login
+        
+    def test_password_history_list(self):
+        # given
+        user_id, user_token = create_test_user_and_get_token(session=self.session)
+
+        # given create password and password history
+        password_entity = create_password(session=self.session, user_id=user_id, name='password_name_1', login='test1')
+        password_client_side_encrypted = _decrypt_password_server_side(
+            session=self.session,
+            password_server_side_encrypted=password_entity.password_encrypted,
+            user_id=user_id
+        )
+        password_dto = create_password_dto(
+            password_entity=password_entity,
+            password_client_side_encrypted=password_client_side_encrypted
+        )
+        password_history = create_password_history(
+            db_session=self.session,
+            password_id=password_entity.id,
+            password_details=password_dto
+        )
+
+        headers = {
+            "X-API-KEY": user_token,
+            'Accept': 'application/json'
+        }
+
+        # when
+        response = self.test_api.get(
+            url=f"/password/{password_entity.id}/history",
+            headers=headers
+        )
+        response_json = response.json()
+        password_history_response = [PasswordHistoryResponseSchema.model_validate(item) for item in response_json]
+
+        # then
+        assert len(password_entity.history) == 1
+        assert len(password_history_response) == 1
+        assert password_history_response[0].name == password_history.name
+
+    def test_password_history_list_when_password_not_belong_to_user(self):
+        # given
+        user1_id, user1_token = create_test_user_and_get_token(session=self.session, user='user1', password_clear='user1')
+        user2_id, user2_token = create_test_user_and_get_token(session=self.session, user='user2', password_clear='user2')
+
+        # given create password and password history
+        user1_password = create_password(session=self.session, user_id=user1_id, name='password_name_1', login='test1')
+        password_client_side_encrypted = _decrypt_password_server_side(
+            session=self.session,
+            password_server_side_encrypted=user1_password.password_encrypted,
+            user_id=user1_id
+        )
+        user1_password_dto = create_password_dto(
+            password_entity=user1_password,
+            password_client_side_encrypted=password_client_side_encrypted
+        )
+        create_password_history(
+            db_session=self.session,
+            password_id=user1_password.id,
+            password_details=user1_password_dto
+        )
+
+        headers = {
+            "X-API-KEY": user2_token,
+            'Accept': 'application/json'
+        }
+
+        # when
+        response = self.test_api.get(
+            url=f"/password/{user1_password.id}/history",
+            headers=headers
+        )
+        response_json = response.json()
+
+        # then
+        assert response.status_code == 400
+        assert 'Password not belongs to user' in response_json['detail']
 
     def test_create_password(self):
         # given
@@ -103,7 +156,7 @@ class ApiPasswordTests(ApiBaseTest):
         # given
         password_service = PasswordService(session=self.session)
         user_id, user_token = create_test_user_and_get_token(session=self.session)
-        password_entity = _create_password(session=self.session, user_id=user_id)
+        password_entity = create_password(session=self.session, user_id=user_id)
         password_id = str(password_entity.id)
         headers = {
             "X-API-KEY": user_token,
@@ -149,7 +202,7 @@ class ApiPasswordTests(ApiBaseTest):
         # given
         password_service = PasswordService(session=self.session)
         user_id, user_token = create_test_user_and_get_token(session=self.session)
-        password_entity = _create_password(session=self.session, user_id=user_id)
+        password_entity = create_password(session=self.session, user_id=user_id)
         password_id = str(password_entity.id)
         headers = {
             "X-API-KEY": user_token,

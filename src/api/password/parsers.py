@@ -1,8 +1,11 @@
+from typing import List
+
 from src.api.password.schema import PasswordHistoryResponseSchema
 from src.password.types import PasswordHistoryDTO
 
 
-def parse_password_history_to_response_schema(password_history_entity: PasswordHistoryDTO) -> PasswordHistoryResponseSchema:
+def parse_password_history_to_response_schema(password_history_entity: PasswordHistoryDTO) \
+        -> PasswordHistoryResponseSchema:
     password_history_data = PasswordHistoryResponseSchema(
         id=password_history_entity.id,
         name=password_history_entity.name,
@@ -15,3 +18,12 @@ def parse_password_history_to_response_schema(password_history_entity: PasswordH
         password_id=password_history_entity.id
     )
     return password_history_data
+
+
+def parse_password_history_entities_to_response_schema(entities: List[PasswordHistoryDTO]) \
+        -> List[PasswordHistoryResponseSchema]:
+    parsed_entities = []
+    for entity in entities:
+        parsed_entity = parse_password_history_to_response_schema(password_history_entity=entity)
+        parsed_entities.append(parsed_entity)
+    return parsed_entities
