@@ -1,8 +1,10 @@
 import logging
+import os
 import uuid
 from typing import Optional, List
 
 from src.common.BaseService import BaseService
+from src.group.exceptions import GroupDeleteNotAllowedError
 from src.group.models import GroupModel
 from src.group.repositories import GroupRepository
 from src.password.repositories import PasswordGroupRepository
@@ -51,8 +53,10 @@ class GroupService(BaseService):
         group_repo = GroupRepository(session=self.session)
         group_user_repo = UserGroupRepository(session=self.session)
         group_entity = group_repo.find_by_id(group_id=group_id)
-        group_users_ids = [user.id for user in group_entity.users]
+        if group_entity.name == os.environ['USER_DEFAULT_GROUP_NAME']:
+            raise GroupDeleteNotAllowedError('Cannot delete user default group')
 
+        group_users_ids = [user.id for user in group_entity.users]
         if user_id not in group_users_ids:
             raise Exception("This group not belong to user")
 

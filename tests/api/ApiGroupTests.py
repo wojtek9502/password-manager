@@ -1,3 +1,5 @@
+import os
+
 from src.api.group.schema import GroupCreateRequestSchema, GroupUpdateRequestSchema
 from src.group.repositories import GroupRepository
 from tests.api.ApiBaseTests import ApiBaseTest
@@ -39,7 +41,7 @@ class ApiGroupTests(ApiBaseTest):
 
         # then
         assert len(groups_all) == expected_group_num
-        assert 'default' in group_names
+        assert os.environ['USER_DEFAULT_GROUP_NAME'] in group_names
         assert group_name1 in group_names
         assert group_name2 in group_names
 
@@ -143,3 +145,33 @@ class ApiGroupTests(ApiBaseTest):
         # then
         assert len(groups_all) == expected_group_num
         assert deleted_group_id == group_to_delete_id
+
+    def test_delete_default_group(self):
+        # given
+        # create user and default group for user
+        user_id, user_token = create_test_user_and_get_token(session=self.session)
+
+        user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
+        group_to_delete_id = str(user_default_group.id)
+
+        headers = {
+            "X-API-KEY": user_token,
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            group_id=group_to_delete_id
+        )
+
+        # when
+        response = self.test_api.delete(
+            url="/group/delete",
+            headers=headers,
+            params=payload
+        )
+        response_json = response.json()
+
+        # then
+        assert response.status_code == 400
+        assert 'Cannot delete user default group' in response_json['detail']
+
+

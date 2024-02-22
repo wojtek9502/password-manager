@@ -11,6 +11,7 @@ from src.api.group.schema import GroupResponseSchema, GroupCreateRequestSchema, 
     GroupDeleteResponseSchema
 from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
+from src.group.exceptions import GroupError
 from src.group.services import GroupService
 from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserService
@@ -53,7 +54,11 @@ async def create(request: GroupCreateRequestSchema,
         logger.warning("There is no group for this API token")
         raise HTTPException(status_code=404, detail="There is no group for this API token")
 
-    group = group_service.create_group_with_user(name=request.name, user_id=user_id)
+    try:
+        group = group_service.create_group_with_user(name=request.name, user_id=user_id)
+    except GroupError as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
     return GroupResponseSchema(
         group_id=group.id,
@@ -77,11 +82,18 @@ async def update(request: GroupUpdateRequestSchema,
         logger.warning("There is no group for this API token")
         raise HTTPException(status_code=404, detail="There is no group for this API token")
 
-    group = group_service.update(
-        group_id=request.group_id,
-        new_name=request.name,
-        user_id=user_id
-    )
+    try:
+        group = group_service.update(
+            group_id=request.group_id,
+            new_name=request.name,
+            user_id=user_id
+        )
+    except GroupError as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=400, detail=str(e))
+    except NotFoundEntityError:
+        logger.error(f"Not found group with id {request.group_id}")
+        raise HTTPException(status_code=404, detail=f"Not found group with id {request.group_id}")
 
     return GroupResponseSchema(
         group_id=group.id,
@@ -110,6 +122,9 @@ async def delete(group_id: uuid.UUID,
             group_id=group_id,
             user_id=user_id
         )
+    except GroupError as e:
+        logger.error(str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     except NotFoundEntityError:
         logger.error(f"Not found group with id {group_id}")
         raise HTTPException(status_code=404, detail=f"Not found group with id {group_id}")

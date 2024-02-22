@@ -1,3 +1,4 @@
+import os
 import uuid
 from typing import List
 
@@ -70,7 +71,7 @@ class GroupRepository(BaseRepository):
             entity = self.query().join(GroupModel.users).filter(
                 and_(
                     UserModel.id == user_id,
-                    GroupModel.name == 'default'
+                    GroupModel.name == os.environ['USER_DEFAULT_GROUP_NAME']
                 )
             ).one()
         except SQLAlchemyError as e:
