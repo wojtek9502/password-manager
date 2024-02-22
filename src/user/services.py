@@ -107,7 +107,7 @@ class UserService(BaseService):
 
         # create default group for user
         group_repo = GroupRepository(session=self.session)
-        group_entity = group_repo.create(name='default', user_id=entity.id)
+        group_entity = group_repo.create_group_with_user(name='default', user_id=entity.id)
         group_repo.save(group_entity)
         group_repo.commit()
         return entity

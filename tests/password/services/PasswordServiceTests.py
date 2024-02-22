@@ -5,7 +5,7 @@ from src.password.services import PasswordService
 from src.password.types import PasswordDTO
 from src.user.services import UserService
 from tests.BaseTest import BaseTest
-from tests.test_utils.create_db_resources import create_user, create_password_history, create_group, \
+from tests.test_utils.create_db_resources import create_user, create_password_history, create_group_with_user, \
     create_client_side_password_encrypted
 
 
@@ -22,7 +22,7 @@ class PasswordServiceTests(BaseTest):
 
         # password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
+        group1_id = create_group_with_user(session=self.session, group_name=group_name, user_id=user_id).id
         groups_ids = [group1_id]
 
         # password urls
@@ -72,7 +72,7 @@ class PasswordServiceTests(BaseTest):
 
         # password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
+        group1_id = create_group_with_user(session=self.session, group_name=group_name, user_id=user_id).id
         old_groups_ids = [group1_id]
 
         # password urls
@@ -162,7 +162,7 @@ class PasswordServiceTests(BaseTest):
 
         # given - password groups
         group_name = 'group1'
-        group1_id = create_group(session=self.session, group_name=group_name, user_id=user_id).id
+        group1_id = create_group_with_user(session=self.session, group_name=group_name, user_id=user_id).id
         old_groups_ids = [group1_id]
 
         # given - password urls

@@ -14,7 +14,13 @@ class GroupRepository(BaseRepository):
     def model_class(self):
         return GroupModel
 
-    def create(self, name: str, user_id: uuid.UUID) -> GroupModel:
+    def create_group(self, name: str) -> GroupModel:
+        entity = GroupModel(
+            name=name
+        )
+        return entity
+
+    def create_group_with_user(self, name: str, user_id: uuid.UUID) -> GroupModel:
         entity = GroupModel(
             name=name
         )
@@ -25,6 +31,14 @@ class GroupRepository(BaseRepository):
     def update(self, entity_id: uuid.UUID, name: str) -> GroupModel:
         entity: GroupModel = self.get_by_id(entity_id)
         entity.name = name
+        return entity
+
+    def get_all(self) -> List[GroupModel]:
+        try:
+            entity = self.query().all()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
         return entity
 
     def find_groups_by_ids(self, groups_ids: List[uuid.UUID]) -> List[GroupModel]:

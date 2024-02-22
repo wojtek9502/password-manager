@@ -3,17 +3,23 @@ from typing import Tuple
 
 from sqlalchemy.orm import Session
 
-from src import GroupModel
+from src import GroupModel, PasswordModel
 from src.group.services import GroupService
 from src.password.cryptography import CryptographyFernet
-from src.password.services import PasswordHistoryService
+from src.password.services import PasswordHistoryService, PasswordService
 from src.password.types import PasswordDTO, PasswordHistoryDTO
 from src.user.services import UserService, UserTokenService
 
 
-def create_group(session: Session, user_id: uuid.UUID, group_name: str = 'test') -> GroupModel:
+def create_group(session: Session, group_name: str = 'test') -> GroupModel:
     group_service = GroupService(session=session)
-    group_entity = group_service.create(name=group_name, user_id=user_id)
+    group_entity = group_service.create_group(name=group_name)
+    return group_entity
+
+
+def create_group_with_user(session: Session, user_id: uuid.UUID, group_name: str = 'test') -> GroupModel:
+    group_service = GroupService(session=session)
+    group_entity = group_service.create_group_with_user(name=group_name, user_id=user_id)
     return group_entity
 
 
@@ -59,15 +65,6 @@ def create_password_history(db_session: Session, password_id: uuid.UUID, passwor
     return entity
 
 
-def create_password_group(db_session: Session, group_name: str) -> GroupModel:
-    service = GroupService(session=db_session)
-    entity = service.create(
-        name=group_name
-    )
-
-    return entity
-
-
 def create_client_side_password_encrypted(password_clear: str = 'password') -> bytes:
     client_side_password_encrypted = CryptographyFernet().password_encrypt(
         message=password_clear.encode(),
@@ -75,3 +72,23 @@ def create_client_side_password_encrypted(password_clear: str = 'password') -> b
         iterations=600_000
     )
     return client_side_password_encrypted
+
+
+def create_password(session: Session, user_id: uuid.UUID,
+                    name: str = 'test', login: str = 'test@test.pl', password: str = 'pass') -> PasswordModel:
+    password_service = PasswordService(session=session)
+    password_dto: PasswordDTO = PasswordDTO(
+            name=name,
+            login=login,
+            server_side_algo='Fernet',
+            server_side_iterations=600_000,
+            password_encrypted=password.encode(),
+            client_side_algo='Fernet',
+            client_side_iterations=600_000,
+            note='',
+            urls=[],
+            groups_ids=[],
+            user_id=user_id
+        )
+    password_entity = password_service.create(password_details=password_dto)
+    return password_entity
