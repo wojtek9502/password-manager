@@ -13,7 +13,7 @@ from src.common.db_session import get_db_session
 from src.user.exceptions import UserLoginPasswordInvalidError
 from src.user.services import UserService, UserTokenService
 
-router = APIRouter(prefix='/user')
+router = APIRouter(prefix='/user', tags=['Users'])
 logger = logging.getLogger()
 
 

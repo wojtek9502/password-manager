@@ -16,11 +16,13 @@ from src.group.services import GroupService
 from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserService
 
-router = APIRouter(prefix='/group')
+router = APIRouter(prefix='/group', tags=['Groups'])
 logger = logging.getLogger()
 
 
-@router.get("/list", dependencies=[Depends(auth.validate_api_key)], response_model=List[GroupResponseSchema])
+@router.get("/list",
+            dependencies=[Depends(auth.validate_api_key)],
+            response_model=List[GroupResponseSchema])
 async def groups_list(request: Request, session: Session = Depends(get_db_session)):
     user_service = UserService(session=session)
     group_service = GroupService(session=session)

@@ -44,7 +44,7 @@ from src.api.password.router import router as password_router
 from src.api.group.router import router as group_router
 
 app.include_router(user_router)
-app.include_router(tools_router)
 app.include_router(password_router)
 app.include_router(group_router)
+app.include_router(tools_router)
 

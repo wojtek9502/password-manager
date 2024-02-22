@@ -21,7 +21,7 @@ from src.password.types import PasswordDTO
 from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserService
 
-router = APIRouter(prefix='/password')
+router = APIRouter(prefix='/password', tags=['Passwords'])
 logger = logging.getLogger()
 
 
