@@ -37,9 +37,9 @@ class PasswordResponseSchema(BaseModel):
     user_id: uuid.UUID
     note: Optional[str] = ''
 
-    urls: Optional[List[PasswordUrlResponseSchema]] = []
-    history: Optional[List[PasswordHistoryResponseSchema]] = []
-    groups: Optional[List[PasswordGroupResponseSchema]] = []
+    urls: Optional[List[PasswordUrlResponseSchema]]
+    history: Optional[List[PasswordHistoryResponseSchema]]
+    groups: Optional[List[PasswordGroupResponseSchema]]
 
 
 class PasswordListResponseSchema(BaseModel):
@@ -63,8 +63,8 @@ class PasswordCreateResponseSchema(BaseModel):
     login: str
     user_id: uuid.UUID
     note: Optional[str] = ''
-    urls: Optional[List[str]] = []
-    groups_ids: Optional[List[uuid.UUID]] = []
+    urls: Optional[List[str]]
+    groups_ids: Optional[List[uuid.UUID]]
 
 
 class PasswordUpdateRequestSchema(BaseModel):
@@ -85,8 +85,8 @@ class PasswordUpdateResponseSchema(BaseModel):
     login: str
     user_id: uuid.UUID
     note: Optional[str] = ''
-    urls: Optional[List[str]] = []
-    groups_ids: Optional[List[uuid.UUID]] = []
+    urls: Optional[List[str]]
+    groups_ids: Optional[List[uuid.UUID]]
 
 
 class PasswordDeleteResponseSchema(BaseModel):
