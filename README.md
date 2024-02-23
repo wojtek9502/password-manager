@@ -16,21 +16,13 @@ make install
 source venv/bin/activate
 ```
 2) Create .env file in main dir. See .env.example
-3) Run db container
+3) Run db containers
 ```shell
 make up-build
-```
-4) Run db-migrations
-```shell
-make db-upgrade
-```
-5) Run http server with API
-```shell
-python run_server
-```
-5. Go to http://127.0.0.1:8080/swagger-ui
-6. Create your user with /user/create endpoint. Use API_AUTH_MASTER_TOKEN from .env file to authorize
-7. Sign in with user from prev step, use /user/login endpoint. Use token from response to authorize instead of API_AUTH_MASTER_TOKEN
+````
+4) Go to http://127.0.0.1:5000/swagger-ui
+5) Create your user with /user/create endpoint. Use API_AUTH_MASTER_TOKEN from .env file to authorize
+6) Sign in with user from prev step, use /user/login endpoint. Use token from response to authorize instead of API_AUTH_MASTER_TOKEN
 
 
 ### Test
@@ -44,6 +36,13 @@ make coverage
 ```
 
 ## Develop
+You can run run_server.py to run http server instead of rebuild password-manger container after every change
+```shell
+make up
+make db-upgrade
+python run_server.py
+```
+
 ### pgadmin
 1) Run pgadmin
 ```shell

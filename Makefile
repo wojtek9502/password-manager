@@ -5,6 +5,9 @@ pytest = venv/bin/pytest
 up:
 	docker-compose up -d
 
+up-build:
+	docker-compose up --build -d
+
 pull:
 	docker-compose pull
 
