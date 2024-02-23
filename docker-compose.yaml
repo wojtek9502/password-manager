@@ -2,6 +2,7 @@ version: '3.6'
 services:
   db:
     image: postgres:16.1-bullseye
+    container_name: 'password-manager-db'
     environment:
       TZ: Europe/Warsaw
       POSTGRES_DB: password-manager

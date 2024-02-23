@@ -22,7 +22,7 @@ from src.user.models import UserModel, UserTokenModel, UserGroupModel
 from src.group.models import GroupModel
 from src.password.models import PasswordModel, PasswordUrlModel, PasswordHistoryModel, PasswordGroupModel
 
-engine = create_engine(os.environ['DB_URI'])
+engine = create_engine(os.environ['DB_URI'], connect_args={'connect_timeout': 10})
 Base = Database
 
 # FastAPI
