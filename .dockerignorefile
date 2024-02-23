@@ -277,9 +277,11 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv,dotenv
 
-logs
-volumes
+logs/**/*
+volumes/**/*
+volumes/db
+
 db.sql
-.idea
+/.idea
 recreate_db.sh
-test_reports
+/test_reports
