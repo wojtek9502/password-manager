@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from src.api import auth
 from src.api.tools.schema import HealthzSchema
 
-router = APIRouter(dependencies=[Depends(auth.validate_api_key)], tags=['Tools'])
+router = APIRouter(tags=['Tools'])
 logger = logging.getLogger()
 
 
