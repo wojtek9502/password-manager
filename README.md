@@ -26,11 +26,13 @@ make up-build
 
 
 ### Test
+Run 1-3 steps from 'Install and run' and run command
 ```shell
 make test
 ```
 
 ### Coverage
+Run 1-3 steps from 'Install and run' and run command
 ```shell
 make coverage
 ```
