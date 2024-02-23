@@ -38,7 +38,7 @@ make coverage
 ```
 
 ## Develop
-You can run run_server.py to start http server instead of rebuilding an app container after every change
+You can run run_server.py to start http server instead of rebuilding the app container after every change
 ```shell
 make up
 make db-upgrade
