@@ -153,7 +153,6 @@ class UserServiceTest(BaseTest):
         service = UserService(session=self.session)
         username = 'admin'
         password_clear = 'password'
-        new_token = 'new_token'
 
         user_entity = service.create_user(
             username=username,
@@ -207,20 +206,6 @@ class UserServiceTest(BaseTest):
         assert len(repo.find_all()) == 0
 
     def test_delete_not_existing_user(self):
-        # given
-        service = UserService(session=self.session)
-        not_existing_user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')
-
-        # when
-        with pytest.raises(NotFoundEntityError) as exc_info:
-            service.delete_user(
-                user_id=not_existing_user_id,
-            )
-
-        # then
-        assert isinstance(exc_info.value, NotFoundEntityError)
-
-    def test_delete_not_existing_user_by_username(self):
         # given
         service = UserService(session=self.session)
         not_existing_user_id = uuid.UUID('0f0d98c1-5576-4756-8058-f3eaf4cf33ca')

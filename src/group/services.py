@@ -4,7 +4,7 @@ import uuid
 from typing import Optional, List
 
 from src.common.BaseService import BaseService
-from src.group.exceptions import GroupDeleteNotAllowedError
+from src.group.exceptions import GroupDeleteNotAllowedError, GroupUpdateNotAllowedError
 from src.group.models import GroupModel
 from src.group.repositories import GroupRepository
 from src.password.repositories import PasswordGroupRepository
@@ -33,13 +33,18 @@ class GroupService(BaseService):
         groups = repo.find_groups_by_user_id(user_id=user_id)
         return groups
 
+    def find_password_groups(self, password_id: uuid.UUID) -> List[GroupModel]:
+        repo = GroupRepository(session=self.session)
+        groups = repo.find_groups_by_password_id(password_id=password_id)
+        return groups
+
     def update(self, group_id: uuid.UUID, new_name: str, user_id: uuid.UUID) -> Optional[GroupModel]:
         group_repo = GroupRepository(session=self.session)
         group_entity = group_repo.find_by_id(group_id=group_id)
         group_users_ids = [user.id for user in group_entity.users]
 
         if user_id not in group_users_ids:
-            raise Exception("This group not belong to user")
+            raise GroupUpdateNotAllowedError("This group not belong to user")
 
         entity = group_repo.update(
             entity_id=group_id,
@@ -58,12 +63,12 @@ class GroupService(BaseService):
 
         group_users_ids = [user.id for user in group_entity.users]
         if user_id not in group_users_ids:
-            raise Exception("This group not belong to user")
+            raise GroupDeleteNotAllowedError("This group not belong to user")
 
         # move passwords to default group
         user_default_group = group_repo.find_user_default_group(user_id=user_id)
         password_group_repo = PasswordGroupRepository(self.session)
-        password_group_repo.move_passwords_from_group_to_group(
+        password_group_repo.move_password_from_group_to_group(
             src_group_id=group_id,
             dst_group_id=user_default_group.id
         )

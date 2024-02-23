@@ -152,26 +152,6 @@ class UserGroupRepository(BaseRepository):
     def model_class(self):
         return UserGroupModel
 
-    def delete_user_from_group(self, user_id: uuid.UUID, group_id: uuid.UUID) -> uuid.UUID:
-        query = self.query().filter(
-            and_(
-                UserGroupModel.id == user_id,
-                UserGroupModel.group_id == group_id,
-            )
-        )
-        entity = query.one_or_none()
-        if entity:
-            entity_uuid = entity.id
-
-            try:
-                query.delete()
-                self.commit()
-            except SQLAlchemyError as e:
-                self.session.rollback()
-                raise e
-
-            return entity_uuid
-
     def delete_user_from_all_groups(self, user_id: uuid.UUID) -> List[uuid.UUID]:
         query = self.query().filter(UserGroupModel.user_id == user_id)
         entities: List[UserGroupModel] = query.all()

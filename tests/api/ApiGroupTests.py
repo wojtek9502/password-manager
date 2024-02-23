@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from src.api.group.schema import GroupCreateRequestSchema, GroupUpdateRequestSchema
 from src.group.repositories import GroupRepository
@@ -173,5 +174,32 @@ class ApiGroupTests(ApiBaseTest):
         # then
         assert response.status_code == 400
         assert 'Cannot delete user default group' in response_json['detail']
+
+    def test_delete_when_group_not_exists(self):
+        # given
+        user_id, user_token = create_test_user_and_get_token(session=self.session)
+
+        random_uuid = uuid.uuid4()
+        group_to_delete_id = str(random_uuid)
+
+        headers = {
+            "X-API-KEY": user_token,
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            group_id=group_to_delete_id
+        )
+
+        # when
+        response = self.test_api.delete(
+            url="/group/delete",
+            headers=headers,
+            params=payload
+        )
+        response_json = response.json()
+
+        # then
+        assert response.status_code == 400
+        assert 'Delete error' in response_json['detail']
 
 

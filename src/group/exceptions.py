@@ -2,9 +2,9 @@ class GroupError(Exception):
     ...
 
 
-class GroupDeleteNotAllowedError(GroupError):
+class GroupUpdateNotAllowedError(GroupError):
     ...
 
 
-class GroupActionAuthError(GroupError):
+class GroupDeleteNotAllowedError(GroupError):
     ...

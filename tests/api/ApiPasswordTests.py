@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from src.api.password.schema import PasswordCreateRequestSchema, PasswordCreateResponseSchema, \
     PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, PasswordListResponseSchema, PasswordHistoryResponseSchema
 from src.group.repositories import GroupRepository
@@ -34,6 +37,24 @@ class ApiPasswordTests(ApiBaseTest):
         assert response_data.passwords[0].login == password_entity1.login
         assert response_data.passwords[1].name == password_entity2.name
         assert response_data.passwords[1].login == password_entity2.login
+
+    def test_password_list_with_master_token(self):
+        # given
+        user_token = os.environ['API_AUTH_MASTER_TOKEN']
+
+        headers = {
+            "X-API-KEY": user_token,
+            'Accept': 'application/json'
+        }
+
+        # when
+        response = self.test_api.get(
+            url="/password/list",
+            headers=headers
+        )
+
+        # then
+        assert response.status_code == 400
         
     def test_password_history_list(self):
         # given
@@ -222,3 +243,26 @@ class ApiPasswordTests(ApiBaseTest):
 
         # then
         assert not len(user_passwords)
+
+    def test_delete_password_when_password_not_exists(self):
+        # given
+        user_id, user_token = create_test_user_and_get_token(session=self.session)
+        password_id = str(uuid.uuid4())
+        headers = {
+            "X-API-KEY": user_token,
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            password_id=password_id
+        )
+
+        # when
+        request = self.test_api.delete(
+            url="/password/delete",
+            headers=headers,
+            params=payload
+        )
+
+        # then
+        assert request.status_code == 400
+        assert 'Not found password' in request.json()['detail']

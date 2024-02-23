@@ -17,7 +17,7 @@ from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
 from src.user.exceptions import UserLoginPasswordInvalidError, MasterTokenInvalidUseError
 from src.user.models import UserTokenModel
-from src.user.repositories import UserRepository, UserTokenRepository
+from src.user.repositories import UserRepository, UserTokenRepository, UserGroupRepository
 from src.user.types import UserJwtTokenPayload
 
 logger = logging.getLogger()
@@ -155,9 +155,6 @@ class UserService(BaseService):
         return entity
 
     def find_id_by_token(self, token: str) -> Optional[uuid.UUID]:
-        if token == os.environ['API_AUTH_MASTER_TOKEN']:
-            raise MasterTokenInvalidUseError('Master token cannot be use here')
-
         repo = UserTokenRepository(session=self.session)
         try:
             entity = repo.find_by_token(token=token)

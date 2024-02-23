@@ -122,9 +122,8 @@ class PasswordUrlRepository(BaseRepository):
 
         for password_url_entity in entities:
             try:
-                query.delete()
-                self.commit()
-                deleted_entities_ids.append(password_url_entity.id)
+                deleted_url_id = self.delete(password_url_id=password_url_entity.id)
+                deleted_entities_ids.append(deleted_url_id)
             except SQLAlchemyError as e:
                 self.session.rollback()
                 raise e
@@ -163,7 +162,7 @@ class PasswordHistoryRepository(BaseRepository):
         query = self.query().filter(PasswordHistoryModel.id == password_history_id)
         entity = query.one_or_none()
         if entity:
-            entity_uuid = entity.id
+            entity_id = entity.id
 
             try:
                 query.delete()
@@ -172,7 +171,7 @@ class PasswordHistoryRepository(BaseRepository):
                 self.session.rollback()
                 raise e
 
-            return entity_uuid
+            return entity_id
 
     def delete_all_by_password_id(self, password_id: uuid.UUID) -> List[uuid.UUID]:
         query = self.query().filter(PasswordHistoryModel.password_id == password_id)
@@ -181,9 +180,8 @@ class PasswordHistoryRepository(BaseRepository):
 
         for password_history_entity in entities:
             try:
-                query.delete()
-                self.commit()
-                deleted_entities_ids.append(password_history_entity.id)
+                deleted_entity_id = self.delete(password_history_id=password_history_entity.id)
+                deleted_entities_ids.append(deleted_entity_id)
             except SQLAlchemyError as e:
                 self.session.rollback()
                 raise e
@@ -212,26 +210,6 @@ class PasswordGroupRepository(BaseRepository):
         entities = query.all()
         return entities
 
-    def delete_password_from_group(self, password_id: uuid.UUID, group_id: uuid.UUID) -> uuid.UUID:
-        query = self.query().filter(
-            and_(
-                PasswordGroupModel.id == password_id,
-                PasswordGroupModel.group_id == group_id,
-            )
-        )
-        entity = query.one_or_none()
-        if entity:
-            entity_uuid = entity.id
-
-            try:
-                query.delete()
-                self.commit()
-            except SQLAlchemyError as e:
-                self.session.rollback()
-                raise e
-
-            return entity_uuid
-
     def delete_password_from_all_groups(self, password_id: uuid.UUID) -> List[uuid.UUID]:
         query = self.query().filter(PasswordGroupModel.password_id == password_id)
         entities: List[PasswordGroupModel] = query.all()
@@ -247,12 +225,6 @@ class PasswordGroupRepository(BaseRepository):
                 raise e
 
         return deleted_password_ids
-
-    def move_passwords_from_group_to_group(self, src_group_id: uuid.UUID, dst_group_id: uuid.UUID):
-        src_password_group_entities: List[PasswordGroupModel] = self.get_password_group_entities_by_group_id(src_group_id)
-        for src_password_group_entity in src_password_group_entities:
-            src_password_group_entity.group_id = dst_group_id
-        self.commit()
 
     def move_password_from_group_to_group(self, src_group_id: uuid.UUID, dst_group_id: uuid.UUID):
         src_password_group_entities: List[PasswordGroupModel] = self.get_password_group_entities_by_group_id(src_group_id)

@@ -52,21 +52,21 @@ class GroupRepository(BaseRepository):
 
     def find_groups_by_user_id(self, user_id: uuid.UUID) -> List[GroupModel]:
         try:
-            entity = self.query().join(GroupModel.users).filter(UserModel.id == user_id).all()
+            entities = self.query().join(GroupModel.users).filter(UserModel.id == user_id).all()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        return entity
+        return entities
 
     def find_groups_by_password_id(self, password_id: uuid.UUID) -> List[GroupModel]:
         try:
-            entity = self.query().join(GroupModel.passwords).filter_by(PasswordModel.id == password_id).all()
+            entities = self.query().join(GroupModel.passwords).filter(PasswordModel.id == password_id).all()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-        return entity
+        return entities
 
-    def find_user_default_group(self, user_id: uuid.UUID, ) -> GroupModel:
+    def find_user_default_group(self, user_id: uuid.UUID) -> GroupModel:
         try:
             entity = self.query().join(GroupModel.users).filter(
                 and_(
@@ -90,8 +90,6 @@ class GroupRepository(BaseRepository):
     def delete_by_id(self, group_id: uuid.UUID) -> uuid.UUID:
         query = self.query().filter(GroupModel.id == group_id)
         entity = query.one_or_none()
-        if not entity:
-            raise NotFoundEntityError(f"Not found group with uuid: {group_id}")
         entity_uuid = entity.id
 
         try:

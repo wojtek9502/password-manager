@@ -1,5 +1,6 @@
 class UserLoginPasswordInvalidError(Exception):
     ...
 
+
 class MasterTokenInvalidUseError(Exception):
     ...

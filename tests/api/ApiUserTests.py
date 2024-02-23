@@ -133,6 +133,35 @@ class ApiUsersTest(ApiBaseTest):
         # then
         assert response_json['token'] != ''
 
+    def test_user_login_when_user_not_exists(self):
+        # given - create user
+        username = 'test'
+        password = 'test'
+
+        # given
+        API_AUTH_TOKEN = os.environ['API_AUTH_MASTER_TOKEN']
+        headers = {
+            "X-API-KEY": API_AUTH_TOKEN,
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            username=username,
+            password=password
+        )
+
+        # when
+        response = self.test_api.post(
+            url="/user/login",
+            headers=headers,
+            json=payload
+
+        )
+        response_json = response.json()
+
+        # then
+        assert response.status_code == 401
+        assert 'Invalid username or password' in response_json['detail']
+
     def test_user_login_invalid(self):
         # given - create user
         username = 'test'

@@ -65,18 +65,15 @@ class PasswordService(BaseService):
             repo.save(entity)
         repo.commit()
 
-    def _add_groups_to_password_entity(self, password_entity: PasswordModel, password_details: PasswordDTO):
-        # add passwords to groups, if no groups add to user default group
+    def _add_new_password_to_groups(self, password_id: PasswordModel, search_group_ids: List[uuid.UUID]):
         group_repo = GroupRepository(session=self.session)
-        if not len(password_details.groups_ids):
-            user_id = password_details.user_id
-            user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
-            password_details.groups_ids = [user_default_group.id]
+        groups_entities = group_repo.find_groups_by_ids(search_group_ids)
+        group_ids = [group.id for group in groups_entities]
+        self.add_password_to_groups(password_groups_ids=group_ids, password_id=password_id)
 
-        groups_entities = group_repo.find_groups_by_ids(password_details.groups_ids)
-        for group_entity in groups_entities:
-            password_entity.groups.append(group_entity)
-        return password_entity
+    def add_user_default_group_to_password(self, password_id: uuid.UUID, user_id: uuid.UUID):
+        user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
+        self.add_password_to_groups(password_groups_ids=[user_default_group.id], password_id=password_id)
 
     def create(self, password_details: PasswordDTO) -> PasswordModel:
         password_repo = PasswordRepository(session=self.session)
@@ -98,18 +95,24 @@ class PasswordService(BaseService):
             note=password_details.note,
             user_id=password_details.user_id
         )
-
-        # add passwords to groups
-        password_entity = self._add_groups_to_password_entity(
-            password_entity=password_entity,
-            password_details=password_details
-        )
         password_repo.save(password_entity)
         password_repo.commit()
+        created_password_id = password_entity.id
+
+        # add other password resources
+        # add passwords to groups
+        created_password_entity = password_repo.get_by_id(created_password_id)
+        self._add_new_password_to_groups(
+            password_id=created_password_id,
+            search_group_ids=password_details.groups_ids
+        )
+        # add password default group if it is needed
+        if not len(created_password_entity.groups):
+            self.add_user_default_group_to_password(password_id=password_entity.id, user_id=password_details.user_id)
 
         # add password urls
         self.create_password_urls(
-            password_id=password_entity.id,
+            password_id=created_password_id,
             password_urls=password_details.urls
         )
 

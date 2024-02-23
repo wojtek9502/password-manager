@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple
+from typing import Tuple, List
 
 from sqlalchemy.orm import Session
 
@@ -73,8 +73,11 @@ def create_client_side_password_encrypted(password_clear: str = 'password') -> b
     return client_side_password_encrypted
 
 
-def create_password(session: Session, user_id: uuid.UUID,
+def create_password(session: Session, user_id: uuid.UUID, group_ids=None,
                     name: str = 'test', login: str = 'test@test.pl', password: str = 'pass') -> PasswordModel:
+    if group_ids is None:
+        group_ids = []
+
     password_service = PasswordService(session=session)
     password_dto: PasswordDTO = PasswordDTO(
             name=name,
@@ -86,7 +89,7 @@ def create_password(session: Session, user_id: uuid.UUID,
             client_side_iterations=600_000,
             note='',
             urls=[],
-            groups_ids=[],
+            groups_ids=group_ids,
             user_id=user_id
         )
     password_entity = password_service.create(password_details=password_dto)

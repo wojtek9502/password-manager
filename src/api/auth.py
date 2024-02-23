@@ -4,15 +4,16 @@ from fastapi import Security, HTTPException
 from fastapi.security import APIKeyHeader
 
 from src.common.db_session import SessionLocal
+from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserTokenService
 
 API_KEY_NAME = 'X-API-KEY'
-API_KEY = os.environ['API_AUTH_MASTER_TOKEN']
+MASTER_API_KEY = os.environ['API_AUTH_MASTER_TOKEN']
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 
 def _is_token_valid_with_main_token(api_key) -> bool:
-    if api_key == API_KEY:
+    if api_key == MASTER_API_KEY:
         return True
     return False
 
@@ -28,6 +29,7 @@ def _is_user_token_valid(api_key) -> bool:
 
     return is_token_valid
 
+
 async def validate_api_key(api_key: str = Security(api_key_header)):
     if not api_key:
         raise HTTPException(status_code=401, detail='Invalid or missing API Key')
@@ -41,3 +43,8 @@ async def validate_api_key(api_key: str = Security(api_key_header)):
         return
 
     raise HTTPException(status_code=401, detail='Invalid or missing API Key')
+
+
+def validate_is_master_key_used(api_key: str):
+    if api_key == MASTER_API_KEY:
+        raise HTTPException(status_code=400, detail="MASTER_API_KEY usage not allowed here")

@@ -33,6 +33,7 @@ app = FastAPI(
     dependencies=[],
 )
 
+
 @app.get("/", include_in_schema=False)
 async def redirect_to_swagger():
     return RedirectResponse(url='/swagger-ui')

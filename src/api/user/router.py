@@ -30,13 +30,8 @@ async def login(request: LoginRequestSchema, session: Session = Depends(get_db_s
     except (NotFoundEntityError, UserLoginPasswordInvalidError):
         msg = "Invalid username or password"
         raise HTTPException(status_code=401, detail=msg)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
     user_entity = user_service.find_by_username(username=request.username)
-    if not user_entity:
-        raise HTTPException(status_code=404, detail=f"Not found user {request.username}")
-
     entity = user_token_service.create_token(
         token=user_logged_jwt_token,
         user_id=user_entity.id
@@ -51,13 +46,9 @@ async def login(request: LoginRequestSchema, session: Session = Depends(get_db_s
             dependencies=[Depends(auth.validate_api_key)])
 async def find_all(session: Session = Depends(get_db_session)):
     service = UserService(session=session)
-
-    try:
-        entities = service.find_all()
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
     users_response: List[UserResponseSchema] = []
+
+    entities = service.find_all()
     for entity in entities:
         entity_data = UserResponseSchema(
             id=entity.id,

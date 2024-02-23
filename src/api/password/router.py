@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from src.api import auth
+from src.api.auth import validate_is_master_key_used
 from src.api.password.parsers import parse_password_history_to_response_schema, \
     parse_password_history_entities_to_response_schema
 from src.api.password.schema import PasswordListResponseSchema, PasswordCreateResponseSchema, \
@@ -31,13 +32,9 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
     token = request.headers['X-API-KEY']
+    validate_is_master_key_used(api_key=token)
 
-    try:
-        user_id = user_service.find_id_by_token(token=token)
-    except MasterTokenInvalidUseError:
-        logger.warning("There is no passwords for this API token")
-        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
-
+    user_id = user_service.find_id_by_token(token=token)
     passwords_dtos = password_service.get_user_passwords_dtos(user_id=user_id)
     for password_dto in passwords_dtos:
         password_groups_entities = password_service.get_password_groups(password_id=password_dto.id)
@@ -67,13 +64,9 @@ async def password_history_list(request: Request, password_id: uuid.UUID, sessio
     user_service = UserService(session=session)
     password_history_service = PasswordHistoryService(session=session)
     token = request.headers['X-API-KEY']
+    validate_is_master_key_used(api_key=token)
 
-    try:
-        user_id = user_service.find_id_by_token(token=token)
-    except MasterTokenInvalidUseError:
-        logger.warning("There is no passwords for this API token")
-        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
-
+    user_id = user_service.find_id_by_token(token=token)
     try:
         password_history_dtos = password_history_service.get_password_history(
             password_id=password_id,
@@ -94,13 +87,9 @@ async def create(request: PasswordCreateRequestSchema,
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
+    validate_is_master_key_used(api_key=token)
 
-    try:
-        user_id = user_service.find_id_by_token(token=token)
-    except MasterTokenInvalidUseError:
-        logger.warning("There is no passwords for this API token")
-        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
-
+    user_id = user_service.find_id_by_token(token=token)
     password_details: PasswordDTO = PasswordDTO(
         name=request.name,
         login=request.login,
@@ -136,13 +125,9 @@ async def update(request: PasswordUpdateRequestSchema,
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
+    validate_is_master_key_used(api_key=token)
 
-    try:
-        user_id = user_service.find_id_by_token(token=token)
-    except MasterTokenInvalidUseError:
-        logger.warning("There is no passwords for this API token")
-        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
-
+    user_id = user_service.find_id_by_token(token=token)
     password_details: PasswordDTO = PasswordDTO(
         name=request.name,
         login=request.login,
@@ -180,13 +165,9 @@ async def delete(password_id: uuid.UUID,
     token = x_api_key
     user_service = UserService(session=session)
     password_service = PasswordService(session=session)
+    validate_is_master_key_used(api_key=token)
 
-    try:
-        user_id = user_service.find_id_by_token(token=token)
-    except MasterTokenInvalidUseError:
-        logger.warning("There is no passwords for this API token")
-        raise HTTPException(status_code=404, detail="There is no passwords for this API token")
-
+    user_id = user_service.find_id_by_token(token=token)
     try:
         deleted_password_id = password_service.delete(
             password_id=password_id,
@@ -194,7 +175,7 @@ async def delete(password_id: uuid.UUID,
         )
     except NotFoundEntityError:
         logger.error(f"Not found password with id {password_id}")
-        raise HTTPException(status_code=404, detail=f"Not found password with id {password_id}")
+        raise HTTPException(status_code=400, detail=f"Not found password with id {password_id}")
 
     return PasswordDeleteResponseSchema(
         password_id=deleted_password_id
