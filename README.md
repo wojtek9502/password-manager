@@ -16,7 +16,7 @@ make install
 source venv/bin/activate
 ```
 2) Create .env file in main dir. See .env.example
-3) Run db containers
+3) Run containers
 ```shell
 make up-build
 ````
