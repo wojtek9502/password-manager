@@ -1,5 +1,5 @@
 ## Password manager
-Dockerhub: https://hub.docker.com/repository/docker/wojtek9502/password-manager-api
+Dockerhub: https://hub.docker.com/repository/docker/wojtek9502/password-manager-api  
 Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-manager-k8s
 
 ### Requirements
