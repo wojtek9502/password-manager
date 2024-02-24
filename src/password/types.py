@@ -3,6 +3,19 @@ import uuid
 from typing import List, Optional
 
 @dataclasses.dataclass
+class PasswordUrlDTO:
+    name: str
+    login: str
+    client_side_password_encrypted: bytes
+    client_side_algo: str
+    client_side_iterations: int
+    note: str
+    password_id: uuid.UUID
+    user_id: uuid.UUID
+    id: Optional[uuid.UUID] = None
+
+
+@dataclasses.dataclass
 class PasswordHistoryDTO:
     name: str
     login: str

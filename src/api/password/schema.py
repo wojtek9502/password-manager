@@ -4,12 +4,6 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class PasswordUrlResponseSchema(BaseModel):
-    id: uuid.UUID
-    url: str
-    password_id: uuid.UUID
-
-
 class PasswordGroupResponseSchema(BaseModel):
     id: uuid.UUID
     name: str
@@ -37,7 +31,7 @@ class PasswordResponseSchema(BaseModel):
     user_id: uuid.UUID
     note: Optional[str] = ''
 
-    urls: Optional[List[PasswordUrlResponseSchema]]
+    urls: Optional[List[str]]
     history: Optional[List[PasswordHistoryResponseSchema]]
     groups: Optional[List[PasswordGroupResponseSchema]]
 
@@ -52,9 +46,9 @@ class PasswordCreateRequestSchema(BaseModel):
     password_encrypted: str
     client_side_algo: str
     client_side_iterations: int
-    note: str
+    note: Optional[str]
     urls: List[str]
-    groups_ids: List[uuid.UUID]
+    groups_ids: Optional[List[uuid.UUID]]
 
 
 class PasswordCreateResponseSchema(BaseModel):

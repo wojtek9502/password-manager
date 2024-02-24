@@ -135,7 +135,7 @@ class ApiPasswordTests(ApiBaseTest):
 
     def test_create_password(self):
         # given
-        user_id, user_token = create_test_user_and_get_token(session=self.session)
+        user_id, user_token = create_test_user_and_get_token(session=self.session, user='test2')
         user_default_group = GroupRepository(session=self.session).find_user_default_group(user_id=user_id)
         headers = {
             "X-API-KEY": user_token,

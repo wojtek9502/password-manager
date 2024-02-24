@@ -10,9 +10,9 @@ services:
       POSTGRES_PASSWORD: admin
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 7
+      retries: 10
     network_mode: host
     volumes:
       - /home/volumes/db:/var/lib/postgresql/data

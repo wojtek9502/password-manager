@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.common.BaseService import BaseService
 from src.group.repositories import GroupRepository
+from src.password.services import PasswordService
 from src.user.models import UserModel
 from src.common.BaseRepository import NotFoundEntityError
 from src.user.exceptions import UserLoginPasswordInvalidError, MasterTokenInvalidUseError
@@ -129,7 +130,12 @@ class UserService(BaseService):
         return entity
 
     def delete_user(self, user_id: uuid.UUID) -> uuid.UUID:
+        password_service = PasswordService(session=self.session)
         repo = UserRepository(session=self.session)
+
+        # delete user passwords
+        password_service.delete_user_passwords(user_id=user_id)
+
         try:
             entity_uuid = repo.delete_by_id(
                 user_id=user_id,

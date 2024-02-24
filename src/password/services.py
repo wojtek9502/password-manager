@@ -5,7 +5,7 @@ from typing import List
 from src import GroupModel
 from src.common.BaseService import BaseService
 from src.group.repositories import GroupRepository
-from src.password.exceptions import PasswordNotBelongsToUserError
+from src.password.exceptions import PasswordNotBelongsToUserError, PasswordNotFoundError
 from src.password.models import PasswordModel, PasswordHistoryModel
 from src.password.repositories import PasswordRepository, PasswordUrlRepository, PasswordGroupRepository, \
     PasswordHistoryRepository
@@ -184,6 +184,9 @@ class PasswordService(BaseService):
     def update(self, entity_id: uuid.UUID, password_new_details: PasswordDTO) -> PasswordModel:
         password_repo = PasswordRepository(session=self.session)
         old_password_entity = password_repo.get_by_id(entity_id)
+        if not old_password_entity:
+            raise PasswordNotFoundError(f"Password with id: {entity_id} not exists")
+
         old_password_dto = self._password_update_prepare_password_history_dto(
             old_password_entity=old_password_entity,
             user_id=password_new_details.user_id
@@ -226,6 +229,13 @@ class PasswordService(BaseService):
         )
 
         return password_entity
+
+    def delete_user_passwords(self, user_id: uuid.UUID):
+        password_repo = PasswordRepository(session=self.session)
+        password_entities = password_repo.find_all_by_user(user_id=user_id)
+        password_ids = [password.id for password in password_entities]
+        for password_id in password_ids:
+            self.delete(password_id=password_id, user_id=user_id)
 
     def delete(self, password_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
         # delete urls

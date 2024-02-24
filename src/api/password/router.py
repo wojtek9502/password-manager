@@ -11,7 +11,7 @@ from src.api.password.parsers import parse_password_history_to_response_schema, 
     parse_password_history_entities_to_response_schema
 from src.api.password.schema import PasswordListResponseSchema, PasswordCreateResponseSchema, \
     PasswordCreateRequestSchema, PasswordUpdateRequestSchema, PasswordUpdateResponseSchema, \
-    PasswordDeleteResponseSchema, PasswordResponseSchema, PasswordGroupResponseSchema, PasswordUrlResponseSchema, \
+    PasswordDeleteResponseSchema, PasswordResponseSchema, PasswordGroupResponseSchema, \
     PasswordHistoryResponseSchema
 from src.common.BaseRepository import NotFoundEntityError
 from src.common.db_session import get_db_session
@@ -19,7 +19,6 @@ from src.common.db_utils import entity_to_dict
 from src.password.exceptions import PasswordError
 from src.password.services import PasswordService, PasswordHistoryService
 from src.password.types import PasswordDTO
-from src.user.exceptions import MasterTokenInvalidUseError
 from src.user.services import UserService
 
 router = APIRouter(prefix='/password', tags=['Passwords'])
@@ -39,7 +38,6 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
     for password_dto in passwords_dtos:
         password_groups_entities = password_service.get_password_groups(password_id=password_dto.id)
         password_groups = [PasswordGroupResponseSchema.model_validate(entity_to_dict(group)) for group in password_groups_entities]
-        password_urls = [PasswordUrlResponseSchema.model_validate(entity_to_dict(url)) for url in password_dto.urls]
         password_history_items = [parse_password_history_to_response_schema(history) for history in password_dto.history]
 
         password_item = PasswordResponseSchema(
@@ -50,7 +48,7 @@ async def password_list(request: Request, session: Session = Depends(get_db_sess
             client_side_algo=password_dto.client_side_algo,
             client_side_iterations=password_dto.client_side_iterations,
             user_id=password_dto.user_id,
-            urls=password_urls,
+            urls=password_dto.urls,
             history=password_history_items,
             groups=password_groups
         )
@@ -139,10 +137,15 @@ async def update(request: PasswordUpdateRequestSchema,
         groups_ids=request.groups_ids,
         user_id=user_id
     )
-    password = password_service.update(
-        entity_id=request.password_id,
-        password_new_details=password_details
-    )
+    try:
+        password = password_service.update(
+            entity_id=request.password_id,
+            password_new_details=password_details
+        )
+    except PasswordError as e:
+        logger.error(f"Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error: {str(e)}")
+
     password_urls = [url.url for url in password.urls]
     groups_ids = [group.id for group in password.groups]
     return PasswordUpdateResponseSchema(

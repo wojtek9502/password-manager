@@ -90,15 +90,16 @@ class UserRepository(BaseRepository):
         return entity
 
     def delete_by_id(self, user_id: uuid.UUID) -> uuid.UUID:
+        user_token_repo = UserTokenRepository(session=self.session)
+        user_group_repo = UserGroupRepository(session=self.session)
         query = self.query().filter(UserModel.id == user_id)
         entity = query.one_or_none()
         if not entity:
             raise NotFoundEntityError(f"Not found user with uuid: {user_id}")
         entity_uuid = entity.id
 
-        UserGroupRepository(session=self.session).delete_user_from_all_groups(
-            user_id=user_id
-        )
+        user_token_repo.delete_user_tokens(user_id=user_id)
+        user_group_repo.delete_user_from_all_groups(user_id=user_id)
 
         try:
             query.delete()
@@ -125,6 +126,16 @@ class UserTokenRepository(BaseRepository):
             user_id=user_id
         )
         return entity
+
+    def delete_user_tokens(self, user_id: uuid.UUID):
+        entities = self.query().filter(UserTokenModel.user_id == user_id).all()
+        try:
+            for entity in entities:
+                self.session.delete(entity)
+            self.commit()
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
     def delete_expired_tokens(self):
         date_now = datetime.datetime.now()
