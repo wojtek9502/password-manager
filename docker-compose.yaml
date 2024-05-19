@@ -8,11 +8,6 @@ services:
       POSTGRES_DB: password-manager
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
     network_mode: host
     volumes:
       - /home/volumes/db:/var/lib/postgresql/data
@@ -27,5 +22,4 @@ services:
       - '/home/volumes/password-manager/logs:/app/logs'
     network_mode: host
     depends_on:
-      db:
-        condition: service_healthy
+      - db
