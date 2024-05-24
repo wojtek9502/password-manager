@@ -58,7 +58,10 @@ services:
     depends_on:
       - db
 ```
-3. Run ```make up```
+3. Run
+```sh 
+make up
+```
 4) Go to http://127.0.0.1:8080/swagger-ui
 
 ### Install and run from source
