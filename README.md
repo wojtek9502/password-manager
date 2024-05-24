@@ -62,7 +62,9 @@ services:
 ```sh 
 make up
 ```
-4) Go to http://127.0.0.1:8080/swagger-ui
+4. Go to http://127.0.0.1:8080/swagger-ui
+5. Create your user with /user/create endpoint. Use API_AUTH_MASTER_TOKEN from .env file to authorize
+6. Sign in with user from prev step, use /user/login endpoint. Use token from response to authorize instead of API_AUTH_MASTER_TOKEN
 
 ### Install and run from source
 1) Install venv and activate:
