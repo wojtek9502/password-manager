@@ -33,7 +33,7 @@ class ApiToolsTests(ApiBaseTest):
 
         # when
         response = self.test_api.get(
-            url="/healthz",
+            url="/password/list",
             headers=headers
         )
 
@@ -49,7 +49,7 @@ class ApiToolsTests(ApiBaseTest):
 
         # when
         response = self.test_api.get(
-            url="/healthz",
+            url="/password/list",
             headers=headers
         )
 
