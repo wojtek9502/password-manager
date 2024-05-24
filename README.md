@@ -20,8 +20,13 @@ Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-ma
 <details>
 <summary>Click to see</summary>
 
+All endpoints
 ![img.png](screenshots/screen1.png)
+
+Create password
 ![img.png](screenshots/screen2.png)
+
+Passwords list
 ![img.png](screenshots/screen3.png)
 </details>
 
