@@ -1,13 +1,64 @@
 ## Password manager
+An API for storage your passwords. You can create your account and store your passwords in secure way
+
 Dockerhub: https://hub.docker.com/repository/docker/wojtek9502/password-manager-api  
 Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-manager-k8s
+
+<!-- TOC -->
+  * [Password manager](#password-manager)
+    * [Screenshots](#screenshots)
+    * [Requirements](#requirements)
+    * [Install and run](#install-and-run)
+    * [Test](#test)
+    * [Coverage](#coverage)
+  * [Develop](#develop)
+    * [pgadmin](#pgadmin)
+<!-- TOC -->
+
+### Screenshots
+<details>
+<summary>Click to see</summary>
+
+![img.png](screenshots/screen1.png)
+![img.png](screenshots/screen2.png)
+</details>
 
 ### Requirements
 - Python 3.10
 - Docker >=  24.0.5
 - docker-compose >= 2.23.3
 
-### Install and run
+### Run from Docker
+1. Create .env file in main dir. See .env.example
+2. Create docker-compose file like below:
+```yaml
+version: '3.6'
+services:
+  db:
+    image: postgres:16.1-bullseye
+    container_name: 'password-manager-db'
+    environment:
+      TZ: Europe/Warsaw
+      POSTGRES_DB: password-manager
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    network_mode: host
+    volumes:
+      - /tmp/volumes/password_manager/db:/var/lib/postgresql/data
+
+  password-manager-api:
+    image: 'wojtek9502/password-manager-api'
+    container_name: 'password-manager'
+    command: bash -c 'alembic upgrade head && python run_server.py --port 5000'
+    env_file: .env
+    volumes:
+      - '/home/volumes/password-manager/logs:/app/logs'
+    network_mode: host
+    depends_on:
+      - db
+```
+
+### Install and run from source
 1) Install venv and activate:
 ```shell
 python -m pip install virtualenv
