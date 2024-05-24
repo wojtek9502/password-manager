@@ -45,7 +45,7 @@ services:
       POSTGRES_PASSWORD: admin
     network_mode: host
     volumes:
-      - /tmp/volumes/password_manager/db:/var/lib/postgresql/data
+      - '/tmp/volumes/password_manager/db:/var/lib/postgresql/data'
 
   password-manager-api:
     image: 'wojtek9502/password-manager-api'
@@ -53,7 +53,7 @@ services:
     command: bash -c 'alembic upgrade head && python run_server.py --port 8080'
     env_file: .env
     volumes:
-      - '/tmp/volumes/password-manager/logs:/app/logs'
+      - '/tmp/volumes/password_manager/logs:/app/logs'
     network_mode: host
     depends_on:
       - db
