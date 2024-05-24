@@ -10,16 +10,4 @@ services:
       POSTGRES_PASSWORD: admin
     network_mode: host
     volumes:
-      - /home/volumes/db:/var/lib/postgresql/data
-
-  password-manager-api:
-    image: 'password-manager-local'
-    container_name: 'password-manager'
-    build: ./
-    command: bash -c 'alembic upgrade head && python run_server.py --port 5000'
-    env_file: .env
-    volumes:
-      - '/home/volumes/password-manager/logs:/app/logs'
-    network_mode: host
-    depends_on:
-      - db
+      - /home/volumes/password_manager/db:/var/lib/postgresql/data
