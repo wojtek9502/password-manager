@@ -1,13 +1,14 @@
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from src import engine
 
-SessionLocal = sessionmaker(autocommit=False, bind=engine)
+session_factory = sessionmaker(autocommit=False, bind=engine)
+Session = scoped_session(session_factory)
 
 
 def get_db_session():
-    db = SessionLocal()
+    session = Session()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        session.close()

@@ -4,14 +4,14 @@ import pytest
 from sqlalchemy import inspect, text
 
 from src import engine
-from src.common.db_session import SessionLocal
+from src.common.db_session import Session
 
 
 class BaseTest(TestCase):
     session = None
 
     def setUp(self):
-        self.session = SessionLocal()
+        self.session = Session()
 
     def tearDown(self):
         if self.session.is_active:
@@ -25,7 +25,8 @@ class BaseTest(TestCase):
     def cleanup_db():
         db_inspect = inspect(engine)
         tables = sorted(db_inspect.get_table_names())
-        tables.remove("alembic_version")
+        if 'alembic_version' in tables:
+            tables.remove("alembic_version")
 
         connection = engine.connect()
         transaction = connection.begin()
