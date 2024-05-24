@@ -6,12 +6,13 @@ Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-ma
 
 <!-- TOC -->
   * [Password manager](#password-manager)
+    * [Screenshots](#screenshots)
     * [Requirements](#requirements)
     * [Run from Docker](#run-from-docker)
     * [Install and run from source](#install-and-run-from-source)
     * [Test](#test)
     * [Coverage](#coverage)
-  * [Develop](#develop)
+    * [Develop](#develop)
     * [pgadmin](#pgadmin)
 <!-- TOC -->
 
@@ -96,7 +97,7 @@ Run 1-3 steps from 'Install and run' and run command
 make coverage
 ```
 
-## Develop
+### Develop
 You can run run_server.py to start http server instead of rebuilding the app container after every change
 ```shell
 make up
