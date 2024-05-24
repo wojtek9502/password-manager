@@ -6,9 +6,9 @@ Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-ma
 
 <!-- TOC -->
   * [Password manager](#password-manager)
-    * [Screenshots](#screenshots)
     * [Requirements](#requirements)
-    * [Install and run](#install-and-run)
+    * [Run from Docker](#run-from-docker)
+    * [Install and run from source](#install-and-run-from-source)
     * [Test](#test)
     * [Coverage](#coverage)
   * [Develop](#develop)
