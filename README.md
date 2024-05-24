@@ -21,6 +21,7 @@ Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-ma
 
 ![img.png](screenshots/screen1.png)
 ![img.png](screenshots/screen2.png)
+![img.png](screenshots/screen3.png)
 </details>
 
 ### Requirements
@@ -49,14 +50,16 @@ services:
   password-manager-api:
     image: 'wojtek9502/password-manager-api'
     container_name: 'password-manager'
-    command: bash -c 'alembic upgrade head && python run_server.py --port 5000'
+    command: bash -c 'alembic upgrade head && python run_server.py --port 8080'
     env_file: .env
     volumes:
-      - '/home/volumes/password-manager/logs:/app/logs'
+      - '/tmp/volumes/password-manager/logs:/app/logs'
     network_mode: host
     depends_on:
       - db
 ```
+3. Run ```make up```
+4) Go to http://127.0.0.1:8080/swagger-ui
 
 ### Install and run from source
 1) Install venv and activate:

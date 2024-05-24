@@ -3,7 +3,7 @@ pip = venv/bin/pip
 pytest = venv/bin/pytest
 
 up:
-	docker-compose up -d
+	docker-compose up
 
 pull:
 	docker-compose pull

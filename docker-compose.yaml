@@ -10,4 +10,4 @@ services:
       POSTGRES_PASSWORD: admin
     network_mode: host
     volumes:
-      - /home/volumes/password_manager/db:/var/lib/postgresql/data
+      - /tmp/volumes/password_manager/db:/var/lib/postgresql/data
