@@ -3,8 +3,7 @@ import os
 from fastapi import Security, HTTPException
 from fastapi.security import APIKeyHeader
 
-from src.common.db_session import SessionLocal
-from src.user.exceptions import MasterTokenInvalidUseError
+from src.common.db_session import Session
 from src.user.services import UserTokenService
 
 API_KEY_NAME = 'X-API-KEY'
@@ -19,7 +18,7 @@ def _is_token_valid_with_main_token(api_key) -> bool:
 
 
 def _is_user_token_valid(api_key) -> bool:
-    session = SessionLocal()
+    session = Session()
     user_token_service = UserTokenService(session=session)
 
     is_token_valid = user_token_service.is_token_valid(token=api_key)
