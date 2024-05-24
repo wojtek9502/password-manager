@@ -1,5 +1,6 @@
 ## Password manager
-An API for storage your passwords. You can create your account and store your passwords in secure way
+An API for storage your passwords. You can create your account and store your passwords in database, in secure way.  
+When you create/update password, pass the password in endpoint in encrypted form.
 
 Dockerhub: https://hub.docker.com/repository/docker/wojtek9502/password-manager-api  
 Kubernetes local deploy with Minikube: https://github.com/wojtek9502/password-manager-k8s
@@ -26,8 +27,10 @@ All endpoints
 Create password
 ![img.png](screenshots/screen2.png)
 
-Passwords list
+This password will be stored in db in encrypted way
 ![img.png](screenshots/screen3.png)
+
+
 </details>
 
 ### Requirements
